@@ -44,10 +44,10 @@ viewer or the underlying job.
 pi-research
 ```
 
-Inside an existing tmux client, `pi-research` switches that client to the
-project session rather than nesting tmux. Use tmux's session chooser to return.
-For scripts or setup checks, `pi-research --detached` creates the session
-without attaching.
+Inside an existing tmux window, `pi-research` attaches as a nested tmux client;
+it does not replace the outer client's session. To detach from the inner client,
+press the tmux prefix twice (`Ctrl+B`, `Ctrl+B`) and then `D`. For scripts or
+setup checks, `pi-research --detached` creates the session without attaching.
 Slurm output defaults to `<project>/.pi-research-engineer/slurm/`, so it is
 visible both to the submit host and compute node when the project is on shared
 storage. Set `PI_RESEARCH_SLURM_LOG_DIR` to use a different shared log root.
@@ -73,6 +73,13 @@ also applies the checked-in dependency fixes under `patches/`.
 
 `npm link` installs the optional global `pi-research` wrapper used for tmux
 mode. It does not replace the regular `pi` command.
+
+`pi-research` isolates its settings, authentication, model metadata, sessions,
+and web cache under the gitignored `.pi/agent/` in this repository. It does not
+read `~/.pi/agent`. The launcher explicitly loads this package, so its extensions
+and skills remain available without global package registration. Authenticate
+providers separately in the isolated profile. Set `PI_RESEARCH_AGENT_DIR` to
+choose another isolated location.
 
 For development, edit an extension and use `/reload` in a running Pi session.
 

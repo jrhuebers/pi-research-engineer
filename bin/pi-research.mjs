@@ -2,7 +2,7 @@
 
 /** Start ordinary Pi inside a dedicated tmux session for this project. */
 
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 const cwd = process.cwd();
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const tmuxConfig = join(packageRoot, ".tmux.conf");
+const agentDir = process.env.PI_RESEARCH_AGENT_DIR || join(packageRoot, ".pi", "agent");
 const session = process.env.PI_RESEARCH_TMUX_SESSION || "pi-research";
 const stateDir = process.env.PI_RESEARCH_TMUX_STATE_DIR || join(tmpdir(), "pi-research-engineer", "tmux", session);
 const piBinary = process.env.PI_RESEARCH_PI_BIN || join(packageRoot, "node_modules", ".bin", "pi");
@@ -27,21 +28,37 @@ function tmuxArgs(args) {
 	return ["-f", tmuxConfig, ...args];
 }
 
+function nestedClientArgs(args) {
+	const socketPath = process.env.TMUX?.split(",", 1)[0];
+	return [...(socketPath ? ["-S", socketPath] : []), "-f", tmuxConfig, ...args];
+}
+
+function environmentWithoutTmux() {
+	const environment = { ...process.env };
+	delete environment.TMUX;
+	return environment;
+}
+
 function sessionExists() {
 	return spawnSync("tmux", tmuxArgs(["has-session", "-t", session]), { stdio: "ignore" }).status === 0;
 }
 
 mkdirSync(stateDir, { recursive: true });
+mkdirSync(agentDir, { recursive: true });
 if (!sessionExists()) {
 	const environment = [
 		"PI_RESEARCH_TMUX=1",
 		`PI_RESEARCH_TMUX_SESSION=${shellQuote(session)}`,
 		`PI_RESEARCH_TMUX_STATE_DIR=${shellQuote(stateDir)}`,
+		`PI_CODING_AGENT_DIR=${shellQuote(agentDir)}`,
 		...(outerTerminalProgram && outerTerminalProgram !== "tmux"
 			? [`TERM_PROGRAM=${shellQuote(outerTerminalProgram)}`]
 			: []),
 	];
-	const command = `exec env ${environment.join(" ")} ${[piBinary, ...piArgs].map(shellQuote).join(" ")}`;
+	// Load this package explicitly so the isolated agent directory does not
+	// need or inherit the package registration from ~/.pi/agent/settings.json.
+	const commandArgs = [piBinary, "--extension", packageRoot, ...piArgs];
+	const command = `exec env ${environment.join(" ")} ${commandArgs.map(shellQuote).join(" ")}`;
 	const created = spawnSync("tmux", tmuxArgs([
 		"new-session", "-d", "-s", session, "-n", "pi", "-c", cwd,
 		command,
@@ -54,11 +71,12 @@ if (detached) {
 	process.exit(0);
 }
 
-if (process.env.TMUX) {
-	// Avoid a nested tmux client. The current client can switch back with its
-	// normal session chooser or `tmux switch-client`.
-	execFileSync("tmux", tmuxArgs(["switch-client", "-t", session]), { stdio: "inherit" });
-} else {
-	const attached = spawnSync("tmux", tmuxArgs(["attach-session", "-t", session]), { stdio: "inherit" });
-	process.exit(attached.status ?? 0);
-}
+// Unset TMUX for the attaching client so invoking pi-research from an existing
+// tmux window creates a genuinely nested client instead of replacing the outer
+// client's session. Pass the current socket explicitly so custom tmux servers
+// still attach to the pi-research session created above.
+const attached = spawnSync("tmux", nestedClientArgs(["attach-session", "-t", session]), {
+	stdio: "inherit",
+	env: environmentWithoutTmux(),
+});
+process.exit(attached.status ?? 0);
