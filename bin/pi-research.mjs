@@ -3,7 +3,8 @@
 /** Start ordinary Pi inside a dedicated tmux session for this project. */
 
 import { spawnSync } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
@@ -17,6 +18,8 @@ if (!tmuxBinary) {
 	console.error(`pi-research does not provide a bundled tmux for ${process.platform}-${process.arch}. Install on a supported platform or add a package build for this platform.`);
 	process.exit(1);
 }
+const tmuxBinaryId = createHash("sha256").update(readFileSync(tmuxBinary)).digest("hex").slice(0, 12);
+const tmuxSocket = process.env.PI_RESEARCH_TMUX_SOCKET || `pi-research-${tmuxBinaryId}`;
 const agentDir = process.env.PI_RESEARCH_AGENT_DIR || join(packageRoot, ".pi", "agent");
 const session = process.env.PI_RESEARCH_TMUX_SESSION || "pi-research";
 const stateDir = process.env.PI_RESEARCH_TMUX_STATE_DIR || join(tmpdir(), "pi-research-engineer", "tmux", session);
@@ -31,12 +34,9 @@ function shellQuote(value) {
 }
 
 function tmuxArgs(args) {
-	return ["-f", tmuxConfig, ...args];
-}
-
-function nestedClientArgs(args) {
-	const socketPath = process.env.TMUX?.split(",", 1)[0];
-	return [...(socketPath ? ["-S", socketPath] : []), "-f", tmuxConfig, ...args];
+	// A dedicated socket prevents the pinned client from speaking an
+	// incompatible tmux protocol to an existing system-tmux server.
+	return ["-L", tmuxSocket, "-f", tmuxConfig, ...args];
 }
 
 function environmentWithoutTmux() {
@@ -56,6 +56,8 @@ if (!sessionExists()) {
 		"PI_RESEARCH_TMUX=1",
 		`PI_RESEARCH_TMUX_SESSION=${shellQuote(session)}`,
 		`PI_RESEARCH_TMUX_STATE_DIR=${shellQuote(stateDir)}`,
+		`PI_RESEARCH_TMUX_BIN=${shellQuote(tmuxBinary)}`,
+		`PI_RESEARCH_TMUX_SOCKET=${shellQuote(tmuxSocket)}`,
 		`PI_CODING_AGENT_DIR=${shellQuote(agentDir)}`,
 		...(outerTerminalProgram && outerTerminalProgram !== "tmux"
 			? [`TERM_PROGRAM=${shellQuote(outerTerminalProgram)}`]
@@ -79,9 +81,8 @@ if (detached) {
 
 // Unset TMUX for the attaching client so invoking pi-research from an existing
 // tmux window creates a genuinely nested client instead of replacing the outer
-// client's session. Pass the current socket explicitly so custom tmux servers
-// still attach to the pi-research session created above.
-const attached = spawnSync(tmuxBinary, nestedClientArgs(["attach-session", "-t", session]), {
+// client's session. The dedicated -L socket still selects the bundled server.
+const attached = spawnSync(tmuxBinary, tmuxArgs(["attach-session", "-t", session]), {
 	stdio: "inherit",
 	env: environmentWithoutTmux(),
 });

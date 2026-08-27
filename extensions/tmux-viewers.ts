@@ -16,9 +16,11 @@ type ViewerKind = "local" | "slurm";
 
 const session = process.env.PI_RESEARCH_TMUX_SESSION;
 const stateRoot = process.env.PI_RESEARCH_TMUX_STATE_DIR;
+const tmuxBinary = process.env.PI_RESEARCH_TMUX_BIN;
+const tmuxSocket = process.env.PI_RESEARCH_TMUX_SOCKET;
 
 function isEnabled(): boolean {
-	return process.env.PI_RESEARCH_TMUX === "1" && Boolean(session && stateRoot);
+	return process.env.PI_RESEARCH_TMUX === "1" && Boolean(session && stateRoot && tmuxBinary && tmuxSocket);
 }
 
 function shellQuote(value: string): string {
@@ -37,10 +39,11 @@ function statusPath(kind: ViewerKind, id: string): string {
 
 function tmux(args: string[], capture = false): string | undefined {
 	try {
+		const socketArgs = ["-L", tmuxSocket!, ...args];
 		if (capture) {
-			return execFileSync("tmux", args, { encoding: "utf8", timeout: 5_000 }).trim();
+			return execFileSync(tmuxBinary!, socketArgs, { encoding: "utf8", timeout: 5_000 }).trim();
 		}
-		execFileSync("tmux", args, { stdio: "ignore", timeout: 5_000 });
+		execFileSync(tmuxBinary!, socketArgs, { stdio: "ignore", timeout: 5_000 });
 		return undefined;
 	} catch {
 		return undefined;

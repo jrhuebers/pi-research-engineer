@@ -31,8 +31,10 @@ opinionated `source_check` claim-verdict workflow.
 
 Use `pi-research` instead of `pi` when you want a dedicated tmux session for
 the current project. It uses the repository's `.tmux.conf` and a pinned,
-platform-specific tmux binary installed with the package. It creates the
-standard `pi-research` session with a `pi` window and sibling viewer windows
+platform-specific tmux binary installed with the package. The bundled binary
+runs on a dedicated, content-versioned socket, so it never connects to an
+ABI-incompatible system-tmux server. It creates the standard `pi-research`
+session with a `pi` window and sibling viewer windows
 for every local background job and Slurm job started from that session. Viewer
 windows follow the authoritative log and remain visible after a terminal state.
 They do not run or manage the work itself: Patty still owns local child
@@ -75,7 +77,8 @@ also applies the checked-in dependency fixes under `patches/`.
 `npm link` installs the optional global `pi-research` wrapper used for tmux
 mode. It does not replace the regular `pi` command. The wrapper never falls
 back to the system tmux; the package must have a bundled binary for the
-current platform.
+current platform. Set `PI_RESEARCH_TMUX_SOCKET` only when deliberately choosing
+a different dedicated socket shared by the same bundled tmux build.
 
 `pi-research` isolates its settings, authentication, model metadata, sessions,
 and web cache under the gitignored `.pi/agent/` in this repository. It does not
