@@ -1,0 +1,53 @@
+{
+  "name": "pi-research-engineer",
+  "version": "0.1.0",
+  "description": "A personal Pi package for ML and computational research engineering.",
+  "private": true,
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "machine-learning",
+    "computational-research",
+    "slurm"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "bin": {
+    "pi-research": "./bin/pi-research.mjs"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "dependencies": {
+    "pi-patty-bg-tasks": "1.1.6",
+    "pi-web-access": "0.24.1"
+  },
+  "bundledDependencies": [
+    "pi-patty-bg-tasks",
+    "pi-web-access"
+  ],
+  "devDependencies": {
+    "@earendil-works/pi-ai": "0.84.3",
+    "@earendil-works/pi-coding-agent": "0.84.3",
+    "@types/node": "25.6.2",
+    "typebox": "1.1.3",
+    "typescript": "6.0.3"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions",
+      "./node_modules/pi-patty-bg-tasks/index.ts",
+      "./node_modules/pi-web-access/index.ts"
+    ],
+    "skills": [
+      "./skills"
+    ]
+  },
+  "bundleDependencies": [
+    "pi-patty-bg-tasks",
+    "pi-web-access"
+  ]
+}
