@@ -11,6 +11,7 @@
     "slurm"
   ],
   "scripts": {
+    "postinstall": "patch-package",
     "typecheck": "tsc --noEmit"
   },
   "bin": {
@@ -22,6 +23,7 @@
     "typebox": "*"
   },
   "dependencies": {
+    "patch-package": "8.0.1",
     "pi-patty-bg-tasks": "1.1.6",
     "pi-web-access": "0.24.1"
   },

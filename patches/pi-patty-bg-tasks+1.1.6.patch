@@ -1,0 +1,73 @@
+diff --git a/node_modules/pi-patty-bg-tasks/src/hint.ts b/node_modules/pi-patty-bg-tasks/src/hint.ts
+index bae7105..81c68c0 100644
+--- a/node_modules/pi-patty-bg-tasks/src/hint.ts
++++ b/node_modules/pi-patty-bg-tasks/src/hint.ts
+@@ -1,5 +1,5 @@
+ /**
+- * Live "(ctrl+b to run in background)" hint shown below the editor while a
++ * Live "(ctrl+shift+b to run in background)" hint shown below the editor while a
+  * foreground bash command is running — mirrors Claude Code's BackgroundHint,
+  * which appears once a command has run past the quick-completion window.
+  */
+@@ -18,14 +18,11 @@ const HINT_KEY = "bg-hint";
+ let activeHints = 0;
+ 
+ /**
+- * The key to press to background, as shown in the hint. Inside a tmux session
+- * `ctrl+b` is tmux's prefix key, so it must be pressed twice — Claude Code
+- * shows the same "(twice)" note.
++ * The key to press to background, as shown in the hint. Ctrl+B is reserved by
++ * Pi for editor cursor-left, so the extension uses Ctrl+Shift+B.
+  */
+ function backgroundHintLabel(): string {
+-    return process.env.TMUX
+-        ? "ctrl+b ctrl+b (twice) to run in background"
+-        : "ctrl+b to run in background";
++    return "ctrl+shift+b to run in background";
+ }
+ 
+ /** Show the background hint below the editor (idempotent across parallel commands). */
+diff --git a/node_modules/pi-patty-bg-tasks/src/shortcuts.ts b/node_modules/pi-patty-bg-tasks/src/shortcuts.ts
+index 25b7012..7d63e30 100644
+--- a/node_modules/pi-patty-bg-tasks/src/shortcuts.ts
++++ b/node_modules/pi-patty-bg-tasks/src/shortcuts.ts
+@@ -1,7 +1,7 @@
+ /**
+  * Keyboard shortcut registration.
+  *
+- *   - Ctrl+B (and Ctrl+Shift+B alias): move the foreground bash to background
++ *   - Ctrl+Shift+B: move the foreground bash to background
+  *   - Ctrl+Shift+J / Shift+Down: open the background task manager
+  *   - Ctrl+Shift+X: kill the most recent running job
+  */
+@@ -22,17 +22,11 @@ export function registerShortcuts(
+     pi: ExtensionAPI,
+     reg: BackgroundRegistry
+ ): void {
+-    // Primary background shortcut — Ctrl+B, matching Claude Code. Inside a tmux
+-    // session Ctrl+B is tmux's prefix key and must be pressed twice; the live
+-    // hint shown while a command runs says so.
+-    pi.registerShortcut("ctrl+b", {
+-        description: "Background the current foreground process",
+-        handler: async (ctx) => handleCtrlB(reg, pi, ctx),
+-    });
+-
+-    // Alias for muscle memory / terminals that remap Ctrl+B.
++    // Ctrl+B is reserved by Pi for tui.editor.cursorLeft. Claiming it emits a
++    // startup conflict and disables the editor binding, so use the existing
++    // non-conflicting alias as the sole keyboard shortcut.
+     pi.registerShortcut("ctrl+shift+b", {
+-        description: "Background the current foreground process (alias for Ctrl+B)",
++        description: "Background the current foreground process",
+         handler: async (ctx) => handleCtrlB(reg, pi, ctx),
+     });
+ 
+@@ -53,7 +47,7 @@ export function registerShortcuts(
+ }
+ 
+ /**
+- * Ctrl+B / Ctrl+Shift+B handler — hand control back to the agent (Claude Code
++ * Ctrl+Shift+B handler — hand control back to the agent (Claude Code
+  * parity): background the running work and, if a message is queued, interrupt
+  * the turn so it reaches the agent right away. See lifecycle.takeControl.
+  */

@@ -10,13 +10,14 @@ import { tmpdir } from "node:os";
 
 const cwd = process.cwd();
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-const tmuxConfig = join(cwd, ".tmux.conf");
+const tmuxConfig = join(packageRoot, ".tmux.conf");
 const session = process.env.PI_RESEARCH_TMUX_SESSION || "pi-research";
 const stateDir = process.env.PI_RESEARCH_TMUX_STATE_DIR || join(tmpdir(), "pi-research-engineer", "tmux", session);
 const piBinary = process.env.PI_RESEARCH_PI_BIN || join(packageRoot, "node_modules", ".bin", "pi");
 const rawArgs = process.argv.slice(2);
 const detached = rawArgs.includes("--detached");
 const piArgs = rawArgs.filter((arg) => arg !== "--detached");
+const outerTerminalProgram = process.env.TERM_PROGRAM;
 
 function shellQuote(value) {
 	return "'" + value.replaceAll("'", "'\"'\"'") + "'";
@@ -32,7 +33,15 @@ function sessionExists() {
 
 mkdirSync(stateDir, { recursive: true });
 if (!sessionExists()) {
-	const command = `exec env PI_RESEARCH_TMUX=1 PI_RESEARCH_TMUX_SESSION=${shellQuote(session)} PI_RESEARCH_TMUX_STATE_DIR=${shellQuote(stateDir)} ${[piBinary, ...piArgs].map(shellQuote).join(" ")}`;
+	const environment = [
+		"PI_RESEARCH_TMUX=1",
+		`PI_RESEARCH_TMUX_SESSION=${shellQuote(session)}`,
+		`PI_RESEARCH_TMUX_STATE_DIR=${shellQuote(stateDir)}`,
+		...(outerTerminalProgram && outerTerminalProgram !== "tmux"
+			? [`TERM_PROGRAM=${shellQuote(outerTerminalProgram)}`]
+			: []),
+	];
+	const command = `exec env ${environment.join(" ")} ${[piBinary, ...piArgs].map(shellQuote).join(" ")}`;
 	const created = spawnSync("tmux", tmuxArgs([
 		"new-session", "-d", "-s", session, "-n", "pi", "-c", cwd,
 		command,

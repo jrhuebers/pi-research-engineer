@@ -6,7 +6,8 @@ experiment layout, W&B integration, or project-specific provenance system.
 
 ## Included
 
-- `pi-patty-bg-tasks`, with a 30-second foreground-to-background default;
+- `pi-patty-bg-tasks`, with a 30-second foreground-to-background default and
+  `Ctrl+Shift+B` for manual backgrounding (`Ctrl+B` remains Pi cursor-left);
 - `pi-web-access` for web, paper, and documentation lookup;
 - always-on research-engineering guidance;
 - `slurm_submit`, `slurm_jobs`, and `slurm_cancel` tools;
@@ -67,7 +68,8 @@ npm link
 
 This registers the package in Pi's global settings. Thereafter start ordinary
 Pi with `pi`; its extensions and skills are loaded automatically. Pin package
-versions in `package.json`, not with separate global installs.
+versions in `package.json`, not with separate global installs. `npm install`
+also applies the checked-in dependency fixes under `patches/`.
 
 `npm link` installs the optional global `pi-research` wrapper used for tmux
 mode. It does not replace the regular `pi` command.
