@@ -4,14 +4,16 @@
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 
 const cwd = process.cwd();
+const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const tmuxConfig = join(cwd, ".tmux.conf");
 const session = process.env.PI_RESEARCH_TMUX_SESSION || "pi-research";
 const stateDir = process.env.PI_RESEARCH_TMUX_STATE_DIR || join(tmpdir(), "pi-research-engineer", "tmux", session);
-const piBinary = process.env.PI_RESEARCH_PI_BIN || "pi";
+const piBinary = process.env.PI_RESEARCH_PI_BIN || join(packageRoot, "node_modules", ".bin", "pi");
 const rawArgs = process.argv.slice(2);
 const detached = rawArgs.includes("--detached");
 const piArgs = rawArgs.filter((arg) => arg !== "--detached");
