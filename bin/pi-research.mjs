@@ -7,10 +7,16 @@ import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
+import { resolveBundledTmux } from "@rynx-ai/tmux";
 
 const cwd = process.cwd();
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const tmuxConfig = join(packageRoot, ".tmux.conf");
+const tmuxBinary = resolveBundledTmux();
+if (!tmuxBinary) {
+	console.error(`pi-research does not provide a bundled tmux for ${process.platform}-${process.arch}. Install on a supported platform or add a package build for this platform.`);
+	process.exit(1);
+}
 const agentDir = process.env.PI_RESEARCH_AGENT_DIR || join(packageRoot, ".pi", "agent");
 const session = process.env.PI_RESEARCH_TMUX_SESSION || "pi-research";
 const stateDir = process.env.PI_RESEARCH_TMUX_STATE_DIR || join(tmpdir(), "pi-research-engineer", "tmux", session);
@@ -40,7 +46,7 @@ function environmentWithoutTmux() {
 }
 
 function sessionExists() {
-	return spawnSync("tmux", tmuxArgs(["has-session", "-t", session]), { stdio: "ignore" }).status === 0;
+	return spawnSync(tmuxBinary, tmuxArgs(["has-session", "-t", session]), { stdio: "ignore" }).status === 0;
 }
 
 mkdirSync(stateDir, { recursive: true });
@@ -59,7 +65,7 @@ if (!sessionExists()) {
 	// need or inherit the package registration from ~/.pi/agent/settings.json.
 	const commandArgs = [piBinary, "--extension", packageRoot, ...piArgs];
 	const command = `exec env ${environment.join(" ")} ${commandArgs.map(shellQuote).join(" ")}`;
-	const created = spawnSync("tmux", tmuxArgs([
+	const created = spawnSync(tmuxBinary, tmuxArgs([
 		"new-session", "-d", "-s", session, "-n", "pi", "-c", cwd,
 		command,
 	]), { stdio: "inherit" });
@@ -75,7 +81,7 @@ if (detached) {
 // tmux window creates a genuinely nested client instead of replacing the outer
 // client's session. Pass the current socket explicitly so custom tmux servers
 // still attach to the pi-research session created above.
-const attached = spawnSync("tmux", nestedClientArgs(["attach-session", "-t", session]), {
+const attached = spawnSync(tmuxBinary, nestedClientArgs(["attach-session", "-t", session]), {
 	stdio: "inherit",
 	env: environmentWithoutTmux(),
 });

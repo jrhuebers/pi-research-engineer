@@ -30,7 +30,8 @@ opinionated `source_check` claim-verdict workflow.
 ## tmux mode
 
 Use `pi-research` instead of `pi` when you want a dedicated tmux session for
-the current project. It uses the repository's `.tmux.conf` and creates the
+the current project. It uses the repository's `.tmux.conf` and a pinned,
+platform-specific tmux binary installed with the package. It creates the
 standard `pi-research` session with a `pi` window and sibling viewer windows
 for every local background job and Slurm job started from that session. Viewer
 windows follow the authoritative log and remain visible after a terminal state.
@@ -62,7 +63,7 @@ From this repository:
 
 ```bash
 npm install
-npx pi install /Users/jhuebers/projects/pi-research-engineer
+npx pi install .
 npm link
 ```
 
@@ -72,7 +73,9 @@ versions in `package.json`, not with separate global installs. `npm install`
 also applies the checked-in dependency fixes under `patches/`.
 
 `npm link` installs the optional global `pi-research` wrapper used for tmux
-mode. It does not replace the regular `pi` command.
+mode. It does not replace the regular `pi` command. The wrapper never falls
+back to the system tmux; the package must have a bundled binary for the
+current platform.
 
 `pi-research` isolates its settings, authentication, model metadata, sessions,
 and web cache under the gitignored `.pi/agent/` in this repository. It does not
