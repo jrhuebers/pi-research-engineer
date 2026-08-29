@@ -1,29 +1,48 @@
 ---
 name: tmux-operations
-description: Safely inspect and manage tmux sessions and windows without confusing viewer panes with the processes they display. Use when opening, watching, or closing tmux windows.
+description: Manage the Pi research engineer's private tmux session and its job-viewer windows. Use when inspecting, opening, watching, or cleaning up that session.
 ---
 
-# Tmux operations
+# Pi tmux session
 
-Treat tmux as a terminal/viewing surface, not as the owner of long-running
-processes. Closing a window closes its pane; it does not necessarily stop the
-process running in it.
+This session is a viewing surface:
 
-Before changing anything:
+- Slurm owns Slurm jobs.
+- The background-job tool owns local processes.
+- Killing a viewer window does not stop its underlying work.
 
-1. Identify the intended tmux server, socket, and session.
-2. List windows and panes with their names and commands.
-3. Identify which windows are active, viewers, or interactive work.
-4. Check the underlying process or job state before closing a viewer.
+## Use the managed session
 
-When cleaning up:
+Always use Pi's configured binary, socket, and session:
 
-- preserve the user's active/primary window unless asked otherwise;
-- close viewers only when their underlying work is confirmed finished;
-- do not cancel or kill work merely to remove a window;
-- use the relevant process manager to stop work.
+```bash
+TMUX_BIN="$PI_RESEARCH_TMUX_BIN"
+TMUX_SOCKET="$PI_RESEARCH_TMUX_SOCKET"
+TMUX_SESSION="$PI_RESEARCH_TMUX_SESSION"
+"$TMUX_BIN" -L "$TMUX_SOCKET" list-windows -t "$TMUX_SESSION" \
+  -F '#{window_index}|#{window_name}|#{window_active}|#{pane_current_command}'
+```
 
-If an application uses a custom tmux socket or binary, use that configuration
-rather than silently connecting to the default tmux server. If a viewer says it
-is waiting for a log or process, treat that as a display-state message and check
-the underlying work separately.
+Do not silently use the default tmux server. A `server exited unexpectedly`
+error from plain `tmux` often means the wrong server was contacted.
+
+## Inspect and clean up
+
+1. List the managed windows.
+2. Preserve the main `pi` window.
+3. Check `slurm-<jobid>` viewers with `slurm_jobs`.
+4. Check `local-<id>` viewers with `jobs`.
+5. Preserve viewers for active or pending work.
+6. Close viewers only after their underlying work is terminal.
+7. List windows again and report what changed.
+
+Close a viewer with:
+
+```bash
+"$TMUX_BIN" -L "$TMUX_SOCKET" kill-window -t "$TMUX_SESSION:slurm-12345"
+```
+
+Use the job/process tools—not tmux—to cancel or kill underlying work. A
+`[waiting for log...]` message is normally just a viewer waiting for its output
+file; verify the actual job state separately. Delayed notifications can refer
+to old job IDs, so verify before acting.
