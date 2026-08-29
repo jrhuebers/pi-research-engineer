@@ -38,8 +38,9 @@ Use `pi-research-engineer` instead of `pi` when you want a dedicated tmux sessio
 the current project. It uses the repository's `.tmux.conf` and a pinned,
 platform-specific tmux binary installed with the package. The bundled binary
 runs on a dedicated, content-versioned socket, so it never connects to an
-ABI-incompatible system-tmux server. It creates the standard `pi-research`
-session with a `pi` window and sibling viewer windows
+ABI-incompatible system-tmux server. It creates one deterministic tmux session
+per canonical project directory, named `pre-<directory>-<path-hash>`, with a
+`pi` window and sibling viewer windows
 for every local background job and Slurm job started from that session. Viewer
 windows follow the authoritative log and close automatically when the job reaches
 a terminal state. They do not run or manage the work itself: the background-tasks
@@ -54,9 +55,12 @@ pi-research-engineer
 ```
 
 Inside an existing tmux window, `pi-research-engineer` (or `pre`) attaches as a nested tmux client;
-it does not replace the outer client's session. To detach from the inner client,
-press the tmux prefix twice (`Ctrl+B`, `Ctrl+B`) and then `D`. For scripts or
-setup checks, `pi-research-engineer --detached` creates the session without attaching.
+it does not replace the outer client's session. Re-running it from the same
+canonical directory attaches to that directory's existing session; another
+directory gets another session. To detach from the inner client, press the tmux
+prefix twice (`Ctrl+B`, `Ctrl+B`) and then `D`. For scripts or setup checks,
+`pi-research-engineer --detached` creates the session without attaching. Set
+`PI_RESEARCH_TMUX_SESSION` to explicitly choose a session name.
 Slurm output defaults to `<project>/.pi-research-engineer/slurm/`, so it is
 visible both to the submit host and compute node when the project is on shared
 storage. Set `PI_RESEARCH_SLURM_LOG_DIR` to use a different shared log root.

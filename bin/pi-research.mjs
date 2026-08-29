@@ -4,13 +4,14 @@
 
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { mkdirSync, readFileSync, realpathSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { resolveBundledTmux } from "@rynx-ai/tmux";
 
 const cwd = process.cwd();
+const canonicalCwd = realpathSync(cwd);
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const tmuxConfig = join(packageRoot, ".tmux.conf");
 const tmuxBinary = resolveBundledTmux();
@@ -21,7 +22,9 @@ if (!tmuxBinary) {
 const tmuxBinaryId = createHash("sha256").update(readFileSync(tmuxBinary)).digest("hex").slice(0, 12);
 const tmuxSocket = process.env.PI_RESEARCH_TMUX_SOCKET || `pi-research-${tmuxBinaryId}`;
 const agentDir = process.env.PI_RESEARCH_AGENT_DIR || join(packageRoot, ".pi", "agent");
-const session = process.env.PI_RESEARCH_TMUX_SESSION || "pi-research";
+const safeDirectoryName = (basename(canonicalCwd).replaceAll(/[^A-Za-z0-9_-]+/g, "-").replaceAll(/^-+|-+$/g, "") || "project").slice(0, 32);
+const defaultSession = `pre-${safeDirectoryName}-${createHash("sha256").update(canonicalCwd).digest("hex").slice(0, 8)}`;
+const session = process.env.PI_RESEARCH_TMUX_SESSION || defaultSession;
 const stateDir = process.env.PI_RESEARCH_TMUX_STATE_DIR || join(tmpdir(), "pi-research-engineer", "tmux", session);
 const piBinary = process.env.PI_RESEARCH_PI_BIN || join(packageRoot, "node_modules", ".bin", "pi");
 const rawArgs = process.argv.slice(2);
