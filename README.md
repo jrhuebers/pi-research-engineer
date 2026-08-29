@@ -54,10 +54,28 @@ close when the underlying work reaches a terminal state; closing a viewer does
 not cancel its work.
 
 From inside Pi, use the `/detach` command to detach this terminal while
-leaving Pi and all jobs running. The equivalent nested-tmux key sequence is:
+leaving Pi and all jobs running. Detaching only removes the current terminal
+viewer; an active Pi turn, foreground tool command, local background job, or
+Slurm job continues running. The equivalent nested-tmux key sequence is:
 
 ```text
 Ctrl+B  Ctrl+B  D
+```
+
+To reattach later, return to the same canonical project directory and run
+`pre` again:
+
+```bash
+cd /path/to/graph-qmc-2
+pre
+```
+
+`pre` finds the deterministic session for that directory and attaches to it.
+For a session started with a custom name, provide the same override when
+reattaching:
+
+```bash
+PI_RESEARCH_TMUX_SESSION=my-session pre
 ```
 
 To create the session without attaching:
@@ -65,6 +83,10 @@ To create the session without attaching:
 ```bash
 pre --detached
 ```
+
+The bundled tmux socket is stored below `.pi/tmux/` in this repository. Use
+`pre` rather than ordinary `tmux attach`, since the latter looks for a
+different socket and may connect to the wrong tmux server.
 
 Useful overrides:
 
