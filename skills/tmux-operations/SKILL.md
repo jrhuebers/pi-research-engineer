@@ -29,7 +29,7 @@ error from plain `tmux` often means the wrong server was contacted.
 ## Inspect and clean up
 
 1. List the managed windows.
-2. Preserve the main `pi` window.
+2. Preserve the main `agent` window.
 3. Check `slurm-<jobid>` viewers with `slurm_jobs`.
 4. Check `local-<id>` viewers with `jobs`.
 5. Preserve viewers for active or pending work.

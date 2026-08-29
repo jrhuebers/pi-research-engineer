@@ -71,7 +71,7 @@ if (!sessionExists()) {
 	const commandArgs = [piBinary, "--extension", packageRoot, ...piArgs];
 	const command = `exec env ${environment.join(" ")} ${commandArgs.map(shellQuote).join(" ")}`;
 	const created = spawnSync(tmuxBinary, tmuxArgs([
-		"new-session", "-d", "-s", session, "-n", "pi", "-c", cwd,
+		"new-session", "-d", "-s", session, "-n", "agent", "-c", cwd,
 		command,
 	]), { stdio: "inherit" });
 	if (created.status !== 0) process.exit(created.status ?? 1);

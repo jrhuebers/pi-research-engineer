@@ -48,7 +48,7 @@ isolated research environment.
 
 ## Tmux workflow
 
-The main tmux window contains Pi. Local background jobs and Slurm jobs receive
+The main tmux window is named `agent` and contains Pi. Local background jobs and Slurm jobs receive
 separate viewer windows that follow their authoritative logs. Viewer windows
 close when the underlying work reaches a terminal state; closing a viewer does
 not cancel its work.
