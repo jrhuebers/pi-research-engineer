@@ -29,6 +29,8 @@ that session as needed (for example with Pi's `/login`).
 - a package-local Pi executable;
 - this repository's extensions and skills;
 - the bundled, version-pinned tmux binary and a package-local tmux socket;
+- persistent single-level tmux server logs under `<this-repo>/.pi/tmux/logs/`;
+- the `pre-light` theme, with human messages shown on a pale-yellow background;
 - an isolated Pi profile at `<this-repo>/.pi/agent/`.
 
 The default tmux session is deterministic for the canonical working directory.
@@ -88,9 +90,13 @@ To create the session without attaching:
 pre --detached
 ```
 
-The bundled tmux socket is stored below `.pi/tmux/` in this repository. Use
-`pre` rather than ordinary `tmux attach`, since the latter looks for a
-different socket and may connect to the wrong tmux server.
+The bundled tmux socket is stored below `.pi/tmux/` in this repository. New
+servers also write persistent single-level verbose logs named
+`tmux-server-<pid>.log` below `.pi/tmux/logs/`. This is intentionally `-v`,
+not tmux's much noisier `-vv` mode. Override the log directory with
+`PI_RESEARCH_TMUX_LOG_DIR` when needed. Use `pre` rather than ordinary
+`tmux attach`, since the latter looks for a different socket and may connect
+to the wrong tmux server.
 
 Useful overrides:
 

@@ -25,6 +25,7 @@ const tmuxSocket = process.env.PI_RESEARCH_TMUX_SOCKET || `pi-research-${tmuxBin
 // TMUX_TMPDIR. Keep the runtime socket inside this package's ignored state
 // directory instead of inheriting a user-global tmux directory.
 const tmuxTmpDir = process.env.PI_RESEARCH_TMUX_TMPDIR || join(packageRoot, ".pi", "tmux");
+const tmuxLogDir = process.env.PI_RESEARCH_TMUX_LOG_DIR || join(tmuxTmpDir, "logs");
 const agentDir = process.env.PI_RESEARCH_AGENT_DIR || join(packageRoot, ".pi", "agent");
 const safeDirectoryName = (basename(canonicalCwd).replaceAll(/[^A-Za-z0-9_-]+/g, "-").replaceAll(/^-+|-+$/g, "") || "project").slice(0, 32);
 const defaultSession = `pre-${safeDirectoryName}-${createHash("sha256").update(canonicalCwd).digest("hex").slice(0, 8)}`;
@@ -40,10 +41,12 @@ function shellQuote(value) {
 	return "'" + value.replaceAll("'", "'\"'\"'") + "'";
 }
 
-function tmuxArgs(args) {
+function tmuxArgs(args, verbose = false) {
 	// A dedicated socket prevents the pinned client from speaking an
-	// incompatible tmux protocol to an existing system-tmux server.
-	return ["-L", tmuxSocket, "-f", tmuxConfig, ...args];
+	// incompatible tmux protocol to an existing system-tmux server. A single
+	// -v is enabled only when the server is created; -vv is intentionally not
+	// used because it can grow by gigabytes from terminal redraws.
+	return [...(verbose ? ["-v"] : []), "-L", tmuxSocket, "-f", tmuxConfig, ...args];
 }
 
 function tmuxEnvironment() {
@@ -65,6 +68,7 @@ function sessionExists() {
 
 mkdirSync(stateDir, { recursive: true });
 mkdirSync(tmuxTmpDir, { recursive: true, mode: 0o700 });
+mkdirSync(tmuxLogDir, { recursive: true, mode: 0o700 });
 mkdirSync(agentDir, { recursive: true });
 if (!sessionExists()) {
 	const environment = [
@@ -74,6 +78,7 @@ if (!sessionExists()) {
 		`PI_RESEARCH_TMUX_BIN=${shellQuote(tmuxBinary)}`,
 		`PI_RESEARCH_TMUX_SOCKET=${shellQuote(tmuxSocket)}`,
 		`PI_RESEARCH_TMUX_TMPDIR=${shellQuote(tmuxTmpDir)}`,
+		`PI_RESEARCH_TMUX_LOG_DIR=${shellQuote(tmuxLogDir)}`,
 		`TMUX_TMPDIR=${shellQuote(tmuxTmpDir)}`,
 		`PI_CODING_AGENT_DIR=${shellQuote(agentDir)}`,
 		...(outerTerminalProgram && outerTerminalProgram !== "tmux"
@@ -85,12 +90,14 @@ if (!sessionExists()) {
 	// The supervisor records abnormal exits and recovers the agent instead of
 	// allowing tmux to silently remove the pane.
 	const supervisor = join(packageRoot, "bin", "pi-agent-supervisor.mjs");
-	const commandArgs = [process.execPath, supervisor, piBinary, "--extension", packageRoot, ...piArgs];
+	const hasThemeOverride = piArgs.some((arg) => arg === "--theme" || arg === "--use-theme" || arg.startsWith("--theme=") || arg.startsWith("--use-theme="));
+	const defaultThemeArgs = hasThemeOverride ? [] : ["--use-theme", "pre-light"];
+	const commandArgs = [process.execPath, supervisor, piBinary, "--extension", packageRoot, ...defaultThemeArgs, ...piArgs];
 	const command = `exec env ${environment.join(" ")} ${commandArgs.map(shellQuote).join(" ")}`;
 	const created = spawnSync(tmuxBinary, tmuxArgs([
 		"new-session", "-d", "-s", session, "-n", "agent", "-c", cwd,
 		command,
-	]), { stdio: "inherit", env: tmuxEnvironment() });
+	], true), { stdio: "inherit", env: tmuxEnvironment(), cwd: tmuxLogDir });
 	if (created.status !== 0) process.exit(created.status ?? 1);
 	const agentPane = `${session}:agent.0`;
 	spawnSync(tmuxBinary, tmuxArgs(["set-option", "-p", "-t", agentPane, "remain-on-exit", "on"]), {
