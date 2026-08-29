@@ -36,8 +36,8 @@ runs on a dedicated, content-versioned socket, so it never connects to an
 ABI-incompatible system-tmux server. It creates the standard `pi-research`
 session with a `pi` window and sibling viewer windows
 for every local background job and Slurm job started from that session. Viewer
-windows follow the authoritative log and remain visible after a terminal state.
-They do not run or manage the work itself: Patty still owns local child
+windows follow the authoritative log and close automatically when the job reaches
+a terminal state. They do not run or manage the work itself: Patty still owns local child
 processes and Slurm still owns allocations.
 
 `Ctrl+C` is ignored inside a viewer window, so it cannot interrupt the log

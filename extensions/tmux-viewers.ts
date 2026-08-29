@@ -4,7 +4,7 @@
  * tmux deliberately remains a viewing surface, not a process manager: Patty
  * owns local child processes and Slurm owns allocations. This avoids trying to
  * migrate an already-running foreground process into a pane, which Unix cannot
- * do. The viewer follows the authoritative job log and stays visible at exit.
+ * do. The viewer follows the authoritative job log and closes when the job exits.
  */
 
 import { execFileSync } from "node:child_process";
@@ -72,7 +72,7 @@ function viewerScript(logPath: string, statusFile: string, title: string): strin
 		"  status=$(cat \"$status_file\" 2>/dev/null || printf RUNNING)",
 		"  case \"$status\" in",
 		"    COMPLETED) sleep 0.2; printf '%s\\n' '=== completed ==='; exit 0 ;;",
-		"    FAILED|CANCELLED|TIMEOUT) sleep 0.2; printf '%s\\n' \"=== $status ===\"; exit 1 ;;",
+		"    FAILED|CANCELLED|KILLED|TIMEOUT) sleep 0.2; printf '%s\\n' \"=== $status ===\"; exit 1 ;;",
 		"  esac",
 		"  sleep 1",
 		"done",
@@ -92,7 +92,7 @@ function ensureViewer(kind: ViewerKind, id: string, name: string, logPath: strin
 			"new-window", "-d", "-P", "-F", "#{window_id}", "-t", session!, "-n", nameForTmux,
 			command,
 		], true);
-		if (windowId) tmux(["set-window-option", "-t", windowId, "remain-on-exit", "on"]);
+		if (windowId) tmux(["set-window-option", "-t", windowId, "remain-on-exit", "off"]);
 	} catch {
 		// A viewer is an optional human convenience; never disturb the job itself.
 	}
@@ -103,6 +103,7 @@ function markTerminal(kind: ViewerKind, id: string, status: string): void {
 	try {
 		fs.mkdirSync(stateRoot!, { recursive: true });
 		fs.writeFileSync(statusPath(kind, id), `${status.toUpperCase()}\n`);
+		tmux(["kill-window", "-t", `${session}:${windowName(kind, id)}`]);
 	} catch {
 		// See ensureViewer: lifecycle monitoring remains authoritative.
 	}
