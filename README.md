@@ -1,107 +1,241 @@
 # pi-research-engineer
 
-Personal Pi package for ML and computational research engineering. It is a
-single-agent setup: no research-team daemon, agent communication, required
-experiment layout, W&B integration, or project-specific provenance system.
+A private, isolated Pi environment for computational research and engineering.
+It is designed for one interactive agent per project: durable local processes,
+Slurm submission, tmux log viewers, and a reproducible agent profile without
+altering ordinary `pi`.
 
-## Included
-
-- portable `background-tasks` extension: an overridden `bash`, `jobs`, and
-  `/jobs`; its foreground-to-background default lives in
-  `background-tasks/config.yaml`;
-- `pi-web-access` for web, paper, and documentation lookup;
-- always-on research-engineering guidance;
-- durable UTC timestamps after user messages and one elapsed-duration marker
-  when Pi settles and returns control to the human;
-- `slurm_submit`, `slurm_jobs`, and `slurm_cancel` tools;
-- pickup, terminal-state, and optional timed-reminder notifications for Slurm
-  jobs submitted through `slurm_submit`;
-- on-demand skills for computational-research work and Slurm operations.
-
-`bash` accepts `run_in_background`, `background_after_seconds`,
-`max_run_seconds`, `notify_on_exit`, and an optional description. A process
-that is backgrounded is managed as a process group, writes a project-local log
-under `.pi-background-tasks/`, and normally sends one completion notification.
-`jobs` lists active managed jobs, cancels one by job ID, or extends a finite
-maximum runtime. The operator-facing `/jobs` command shows the same list.
-
-The background extension is self-contained in `background-tasks/` and emits
-portable lifecycle events. This package's tmux adapter listens to them; tmux
-is therefore optional for the transferable extension itself.
-
-The web profile keeps ordinary search and page retrieval, but disables the
-opinionated `source_check` claim-verdict workflow.
-
-## tmux mode
-
-Use `pi-research-engineer` instead of `pi` when you want a dedicated tmux session for
-the current project. It uses the repository's `.tmux.conf` and a pinned,
-platform-specific tmux binary installed with the package. The bundled binary
-runs on a dedicated, content-versioned socket, so it never connects to an
-ABI-incompatible system-tmux server. It creates one deterministic tmux session
-per canonical project directory, named `pre-<directory>-<path-hash>`, with a
-`pi` window and sibling viewer windows
-for every local background job and Slurm job started from that session. Viewer
-windows follow the authoritative log and close automatically when the job reaches
-a terminal state. They do not run or manage the work itself: the background-tasks
-extension owns local child processes and Slurm owns allocations.
-
-`Ctrl+C` is ignored inside a viewer window, so it cannot interrupt the log
-viewer or the underlying job.
+## Quick start
 
 ```bash
-pi-research-engineer
-# or: pre
-```
-
-Inside an existing tmux window, `pi-research-engineer` (or `pre`) attaches as a nested tmux client;
-it does not replace the outer client's session. Re-running it from the same
-canonical directory attaches to that directory's existing session; another
-directory gets another session. To detach from the inner client, press the tmux
-prefix twice (`Ctrl+B`, `Ctrl+B`) and then `D`. For scripts or setup checks,
-`pi-research-engineer --detached` creates the session without attaching. Set
-`PI_RESEARCH_TMUX_SESSION` to explicitly choose a session name.
-Slurm output defaults to `<project>/.pi-research-engineer/slurm/`, so it is
-visible both to the submit host and compute node when the project is on shared
-storage. Set `PI_RESEARCH_SLURM_LOG_DIR` to use a different shared log root.
-
-Submitted jobs are stored in the Pi session, so reopening that session resumes
-their monitoring. A fresh Pi session can still inspect account jobs with
-`slurm_jobs(show_all=true)`.
-
-## Install
-
-From this repository:
-
-```bash
+git clone git@github.com:jrhuebers/pi-research-engineer.git
+cd pi-research-engineer
 make setup
+
+# In the project you want to work on:
+cd /path/to/project
+pre
 ```
 
-`make setup` runs `npm install` and `npm link`. The latter installs the global
-`pi-research-engineer` launcher and its short `pre` alias, but does not replace
-or configure the regular `pi` command. The wrapper never falls back to the
-system tmux; the package must have a bundled binary for the current platform.
-Set `PI_RESEARCH_TMUX_SOCKET` only when deliberately choosing a different
-dedicated socket shared by the same bundled tmux build.
+`pre` is a short alias for `pi-research-engineer`.
 
-This setup deliberately does **not** run `pi install` and does not write to
-`~/.pi/agent`. Ordinary `pi` therefore cannot load this repository's extensions
-or skills. `pi-research-engineer`/`pre` explicitly loads this package and
-isolates its settings, authentication, model metadata, sessions, and web cache
-under the gitignored `.pi/agent/` in this repository. Authenticate providers
-separately in the isolated profile. Set `PI_RESEARCH_AGENT_DIR` to choose
-another isolated location.
+The first run uses an isolated Pi profile, so authenticate providers inside
+that session as needed (for example with Pi's `/login`).
 
-For development, edit an extension and use `/reload` in a running Pi session.
-The background-task default is configured in `background-tasks/config.yaml`.
+## What `pre` is
 
-## Slurm policy
+`pre` starts Pi inside a dedicated tmux session using:
 
-`slurm_submit` resolves a selected partition's `MaxTime` and requests that
-maximum. It intentionally has no walltime parameter. Specify a partition when
-the cluster does not have exactly one default partition.
+- a package-local Pi executable;
+- this repository's extensions and skills;
+- the bundled, version-pinned tmux binary and a private tmux socket;
+- an isolated Pi profile at `<this-repo>/.pi/agent/`.
 
-The current implementation submits only to the local Slurm installation.
-Remote-cluster submission needs explicit source staging and site configuration;
-its proposed design and constraints are documented in
-[`docs/remote-slurm.md`](docs/remote-slurm.md).
+The default tmux session is deterministic for the canonical working directory.
+Launching `pre` again from the same directory reattaches to that directory's
+session; launching it from another directory creates a different session.
+
+This is intentionally separate from ordinary `pi`:
+
+- `make setup` does **not** run `pi install`;
+- it does not modify `~/.pi/agent`;
+- ordinary `pi` does not load this repository's extensions or skills;
+- `npm link` only makes the `pre` and `pi-research-engineer` launcher commands
+  available on `PATH`.
+
+Use ordinary `pi` when you want ordinary Pi. Use `pre` when you want this
+isolated research environment.
+
+## Tmux workflow
+
+The main tmux window contains Pi. Local background jobs and Slurm jobs receive
+separate viewer windows that follow their authoritative logs. Viewer windows
+close when the underlying work reaches a terminal state; closing a viewer does
+not cancel its work.
+
+To detach from a nested `pre` tmux client, press the tmux prefix twice and then
+`D`:
+
+```text
+Ctrl+B  Ctrl+B  D
+```
+
+To create the session without attaching:
+
+```bash
+pre --detached
+```
+
+Useful overrides:
+
+```bash
+PI_RESEARCH_TMUX_SESSION=my-session pre
+PI_RESEARCH_AGENT_DIR=/path/to/isolated-profile pre
+PI_RESEARCH_SLURM_LOG_DIR=/shared/log/root pre
+```
+
+## Local background work
+
+The `bash` tool manages long-lived local work. It has this interface:
+
+```ts
+bash({
+  command: string,
+  description?: string,
+  run_in_background?: boolean,       // default false
+  background_after_seconds?: number, // default from config.yaml
+  max_run_seconds?: number,          // unlimited if omitted
+  notify_on_exit?: boolean,          // default true
+})
+```
+
+Examples:
+
+```ts
+// Start a known long-running process immediately.
+bash({
+  command: "python -u train.py --config configs/base.yaml",
+  description: "train base model",
+  run_in_background: true,
+  max_run_seconds: 14400,
+})
+
+// Run normally, but move it to the background after five seconds.
+bash({
+  command: "pytest -q",
+  description: "test suite",
+  background_after_seconds: 5,
+})
+```
+
+Background jobs run in their own process group. They write logs below:
+
+```text
+<project>/.pi-background-tasks/<session-token>/
+```
+
+By default, the agent receives one completion notification containing status,
+duration, exit code, log path, and a bounded log tail. In `pre`, a tmux viewer
+opens when the job is created.
+
+Inspect or control active jobs with:
+
+```ts
+jobs({ action: "list" })
+jobs({ action: "kill", job_id: "job-1" })
+jobs({ action: "extend", job_id: "job-1", max_run_seconds: 7200 })
+```
+
+`extend` sets a new **total** runtime limit measured from process creation. The
+operator-facing `/jobs` command shows the same active-job list without
+involving the model.
+
+The default foreground-to-background delay is configured in:
+
+```text
+background-tasks/config.yaml
+```
+
+On an explicit Pi quit, managed local process groups receive `SIGTERM`. Use
+Slurm for work that must outlive the interactive Pi process.
+
+## Slurm
+
+The local-cluster Slurm tools are:
+
+```ts
+slurm_submit(command, partition?, gpus?, cpus?, mem?, name?, notify_after_minutes?)
+slurm_jobs(show_all?, include_completed?)
+slurm_cancel(job_id, reason)
+```
+
+`slurm_submit` determines the selected partition's finite `MaxTime` and
+requests that walltime automatically. It tracks submitted jobs in the Pi
+session and sends start, completion, and optional elapsed-time notifications.
+
+Slurm logs default to:
+
+```text
+<project>/.pi-research-engineer/slurm/
+```
+
+Use a shared override when required by the cluster:
+
+```bash
+PI_RESEARCH_SLURM_LOG_DIR=/shared/project/logs pre
+```
+
+Slurm allocations are owned by Slurm, not by tmux or Pi. A tmux viewer is only
+a log display. Do not use tmux to cancel an allocation; use `slurm_cancel`.
+
+Only the local Slurm installation is supported today. Remote-cluster design
+constraints—especially immutable source staging—are documented in
+[`docs/remote-slurm.md`](docs/remote-slurm.md). Remote submission is not yet
+implemented.
+
+## Transcript timing
+
+The transcript includes durable UTC markers:
+
+- a timestamp after each user message;
+- one elapsed-duration marker when Pi finishes all automatic work and control
+  returns to the human.
+
+`Z` in a timestamp denotes UTC (Zulu time).
+
+## Sessions
+
+Pi sessions auto-save under the isolated profile:
+
+```text
+<this-repo>/.pi/agent/sessions/
+```
+
+Inside Pi, use `/session` to inspect the current session and `/resume` to pick
+an earlier one. At a fresh launcher start, `pre -c` continues the most recent
+session and `pre -r` opens the session picker.
+
+Detaching tmux keeps Pi and its session running. `/quit` exits Pi cleanly and
+preserves the session transcript.
+
+## Repository layout
+
+```text
+background-tasks/     Standalone local background-task extension and YAML config
+bin/                  pre / pi-research-engineer launcher
+extensions/           Research guidance, Slurm, tmux viewers, timing, policies
+skills/               On-demand computational-research and operations guidance
+docs/                 Design notes
+.tmux.conf            Managed tmux appearance and behavior
+Makefile              Setup and validation targets
+```
+
+The background-task extension is deliberately self-contained so it can later be
+moved into another Pi package without bringing along the Slurm or tmux code.
+
+## Development
+
+```bash
+make setup  # npm install + npm link
+make check  # TypeScript type-check
+```
+
+After editing an extension in a running `pre` session, run:
+
+```text
+/reload
+```
+
+Package and launcher changes generally require running `make setup` again.
+
+## Safety model
+
+This package executes commands and can submit cluster jobs with your Unix
+account. Treat agent actions as normal shell and scheduler actions:
+
+- inspect code, configuration, data assumptions, logs, and artifacts before
+  accepting a research result;
+- use tracked background jobs for local long-running work;
+- use Slurm for durable cluster work;
+- do not consider submission or process launch a successful computation;
+- inspect terminal status, logs, and artifacts before reporting completion.
