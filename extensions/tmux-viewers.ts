@@ -1,9 +1,10 @@
 /**
  * tmux viewer windows for work launched by Pi.
  *
- * tmux deliberately remains a viewing surface, not a process manager: Patty
- * owns local child processes and Slurm owns allocations. This avoids trying to
- * migrate an already-running foreground process into a pane, which Unix cannot
+ * tmux deliberately remains a viewing surface, not a process manager: the
+ * background-tasks extension owns local child processes and Slurm owns
+ * allocations. This avoids trying to migrate an already-running foreground
+ * process into a pane, which Unix cannot
  * do. The viewer follows the authoritative job log and closes when the job exits.
  */
 
@@ -28,8 +29,6 @@ function shellQuote(value: string): string {
 }
 
 function windowName(kind: ViewerKind, id: string): string {
-	// Patty's public local-job ID is job-<Pi PID>-<sequence>. The sequence is
-	// necessary because a single Pi process can run several jobs concurrently.
 	return kind === "local" ? `local-${id.replace(/^job-/, "")}` : `slurm-${id}`;
 }
 
@@ -72,7 +71,7 @@ function viewerScript(logPath: string, statusFile: string, title: string): strin
 		"  status=$(cat \"$status_file\" 2>/dev/null || printf RUNNING)",
 		"  case \"$status\" in",
 		"    COMPLETED) sleep 0.2; printf '%s\\n' '=== completed ==='; exit 0 ;;",
-		"    FAILED|CANCELLED|KILLED|TIMEOUT) sleep 0.2; printf '%s\\n' \"=== $status ===\"; exit 1 ;;",
+		"    FAILED|CANCELLED|KILLED|TIMEOUT|TIMED_OUT) sleep 0.2; printf '%s\\n' \"=== $status ===\"; exit 1 ;;",
 		"  esac",
 		"  sleep 1",
 		"done",
@@ -122,38 +121,29 @@ function textContent(content: unknown): string {
 export default function tmuxViewers(pi: ExtensionAPI): void {
 	if (!isEnabled()) return;
 
+	pi.events.on("background-tasks:started", (event: unknown) => {
+		const value = event as { id?: unknown; description?: unknown; logPath?: unknown };
+		if (typeof value.id === "string" && typeof value.description === "string" && typeof value.logPath === "string") {
+			ensureViewer("local", value.id, value.description, value.logPath);
+		}
+	});
+
+	pi.events.on("background-tasks:finished", (event: unknown) => {
+		const value = event as { id?: unknown; status?: unknown };
+		if (typeof value.id === "string" && typeof value.status === "string") {
+			markTerminal("local", value.id, value.status);
+		}
+	});
+
 	pi.on("tool_result", (event) => {
-		const text = textContent(event.content);
-		if (event.toolName === "bash") {
-			const startedInBackground = text.match(/Command running in background with ID:\s*(job-[\d-]+)\.(?:\s*Name:\s*([^\n.]+)\.)?\s*Output is being written to:\s*(\S+)/s);
-			if (startedInBackground) {
-				ensureViewer("local", startedInBackground[1], startedInBackground[2]?.trim() || "background job", startedInBackground[3]);
-			}
-			const promotedFromForeground = text.match(/Process backgrounded as\s*(job-[\d-]+)[\s\S]*?\nCommand:\s*([\s\S]*?)\nPID:\s*\d+\nOutput:\s*(\S+)/);
-			if (promotedFromForeground) {
-				ensureViewer("local", promotedFromForeground[1], promotedFromForeground[2].trim() || "background job", promotedFromForeground[3]);
-			}
-		}
-		if (event.toolName === "slurm_submit") {
-			const match = text.match(/Submitted\s+(.+?)\s+as Slurm job\s+(\d+(?:_\d+)?)[\s\S]*?log:\s*(\S+)/);
-			if (match) ensureViewer("slurm", match[2], match[1].trim(), match[3]);
-		}
+		if (event.toolName !== "slurm_submit") return;
+		const match = textContent(event.content).match(/Submitted\s+(.+?)\s+as Slurm job\s+(\d+(?:_\d+)?)[\s\S]*?log:\s*(\S+)/);
+		if (match) ensureViewer("slurm", match[2], match[1].trim(), match[3]);
 	});
 
 	pi.on("message_end", (event) => {
 		const message = event.message as { customType?: string; details?: unknown; content?: unknown } | undefined;
 		if (!message) return;
-		if (message.customType === "job-finished") {
-			const jobs = (message.details as { jobs?: unknown[] } | undefined)?.jobs;
-			if (!Array.isArray(jobs)) return;
-			for (const job of jobs) {
-				if (!job || typeof job !== "object") continue;
-				const value = job as { jobId?: unknown; status?: unknown };
-				if (typeof value.jobId === "string" && typeof value.status === "string") {
-					markTerminal("local", value.jobId, value.status);
-				}
-			}
-		}
 		if (message.customType === "pi-research-engineer-slurm") {
 			const details = message.details as { jobId?: unknown; status?: unknown } | undefined;
 			if (typeof details?.jobId === "string" && typeof details.status === "string") {

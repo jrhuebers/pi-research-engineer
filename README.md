@@ -6,23 +6,28 @@ experiment layout, W&B integration, or project-specific provenance system.
 
 ## Included
 
-- `pi-patty-bg-tasks`, with a 30-second foreground-to-background default and
-  `Ctrl+Shift+B` for manual backgrounding (`Ctrl+B` remains Pi cursor-left);
+- portable `background-tasks` extension: an overridden `bash`, `jobs`, and
+  `/jobs`; its foreground-to-background default lives in
+  `background-tasks/config.yaml`;
 - `pi-web-access` for web, paper, and documentation lookup;
 - always-on research-engineering guidance;
+- durable UTC timestamps after user messages and elapsed-duration markers after
+  each Pi turn;
 - `slurm_submit`, `slurm_jobs`, and `slurm_cancel` tools;
 - pickup, terminal-state, and optional timed-reminder notifications for Slurm
   jobs submitted through `slurm_submit`;
 - on-demand skills for computational-research work and Slurm operations.
 
-Patty's event-streaming `monitor` tool is deliberately disabled: it can inject
-every matching log line into the agent context. `bash_bg` is disabled too;
-use `bash(run_in_background=true, description="…")` for named background
-jobs. `agent_bg` is disabled because its short, lossy context handoff is not a
-reliable basis for computational research work. Ordinary tracked background
-jobs still send one completion notification. `job_decide` is disabled as an
-unnecessary timeout-acknowledgement path; use `jobs` only when a concrete
-inspection or cancellation is needed.
+`bash` accepts `run_in_background`, `background_after_seconds`,
+`max_run_seconds`, `notify_on_exit`, and an optional description. A process
+that is backgrounded is managed as a process group, writes a project-local log
+under `.pi-background-tasks/`, and normally sends one completion notification.
+`jobs` lists active managed jobs, cancels one by job ID, or extends a finite
+maximum runtime. The operator-facing `/jobs` command shows the same list.
+
+The background extension is self-contained in `background-tasks/` and emits
+portable lifecycle events. This package's tmux adapter listens to them; tmux
+is therefore optional for the transferable extension itself.
 
 The web profile keeps ordinary search and page retrieval, but disables the
 opinionated `source_check` claim-verdict workflow.
@@ -37,8 +42,8 @@ ABI-incompatible system-tmux server. It creates the standard `pi-research`
 session with a `pi` window and sibling viewer windows
 for every local background job and Slurm job started from that session. Viewer
 windows follow the authoritative log and close automatically when the job reaches
-a terminal state. They do not run or manage the work itself: Patty still owns local child
-processes and Slurm still owns allocations.
+a terminal state. They do not run or manage the work itself: the background-tasks
+extension owns local child processes and Slurm owns allocations.
 
 `Ctrl+C` is ignored inside a viewer window, so it cannot interrupt the log
 viewer or the underlying job.
@@ -71,8 +76,7 @@ npm link
 
 This registers the package in Pi's global settings. Thereafter start ordinary
 Pi with `pi`; its extensions and skills are loaded automatically. Pin package
-versions in `package.json`, not with separate global installs. `npm install`
-also applies the checked-in dependency fixes under `patches/`.
+versions in `package.json`, not with separate global installs.
 
 `npm link` installs the optional global `pi-research` wrapper used for tmux
 mode. It does not replace the regular `pi` command. The wrapper never falls
@@ -88,9 +92,15 @@ providers separately in the isolated profile. Set `PI_RESEARCH_AGENT_DIR` to
 choose another isolated location.
 
 For development, edit an extension and use `/reload` in a running Pi session.
+The background-task default is configured in `background-tasks/config.yaml`.
 
 ## Slurm policy
 
 `slurm_submit` resolves a selected partition's `MaxTime` and requests that
 maximum. It intentionally has no walltime parameter. Specify a partition when
 the cluster does not have exactly one default partition.
+
+The current implementation submits only to the local Slurm installation.
+Remote-cluster submission needs explicit source staging and site configuration;
+its proposed design and constraints are documented in
+[`docs/remote-slurm.md`](docs/remote-slurm.md).

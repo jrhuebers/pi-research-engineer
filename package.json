@@ -25,11 +25,10 @@
   "dependencies": {
     "@rynx-ai/tmux": "0.0.0-bootstrap.0",
     "patch-package": "8.0.1",
-    "pi-patty-bg-tasks": "1.1.6",
-    "pi-web-access": "0.24.1"
+    "pi-web-access": "0.24.1",
+    "yaml": "2.9.0"
   },
   "bundledDependencies": [
-    "pi-patty-bg-tasks",
     "pi-web-access"
   ],
   "devDependencies": {
@@ -42,7 +41,7 @@
   "pi": {
     "extensions": [
       "./extensions",
-      "./node_modules/pi-patty-bg-tasks/index.ts",
+      "./background-tasks/index.ts",
       "./node_modules/pi-web-access/index.ts"
     ],
     "skills": [
@@ -50,7 +49,6 @@
     ]
   },
   "bundleDependencies": [
-    "pi-patty-bg-tasks",
     "pi-web-access"
   ]
 }

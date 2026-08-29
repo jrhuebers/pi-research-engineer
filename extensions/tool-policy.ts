@@ -1,8 +1,8 @@
-/** Keep redundant or noisy Patty tools out of the personal profile. */
+/** Keep the web profile focused on search and page retrieval. */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
-const DISABLED_TOOLS = new Set(["monitor", "bash_bg", "agent_bg", "job_decide", "source_check"]);
+const DISABLED_TOOLS = new Set(["source_check"]);
 
 function applyToolPolicy(pi: ExtensionAPI): void {
 	const active = pi.getActiveTools();
