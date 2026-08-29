@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit"
   },
   "bin": {
-    "pi-research": "./bin/pi-research.mjs"
+    "pi-research-engineer": "./bin/pi-research.mjs",
+    "pre": "./bin/pi-research.mjs"
   },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",

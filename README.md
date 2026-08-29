@@ -34,7 +34,7 @@ opinionated `source_check` claim-verdict workflow.
 
 ## tmux mode
 
-Use `pi-research` instead of `pi` when you want a dedicated tmux session for
+Use `pi-research-engineer` instead of `pi` when you want a dedicated tmux session for
 the current project. It uses the repository's `.tmux.conf` and a pinned,
 platform-specific tmux binary installed with the package. The bundled binary
 runs on a dedicated, content-versioned socket, so it never connects to an
@@ -49,13 +49,14 @@ extension owns local child processes and Slurm owns allocations.
 viewer or the underlying job.
 
 ```bash
-pi-research
+pi-research-engineer
+# or: pre
 ```
 
-Inside an existing tmux window, `pi-research` attaches as a nested tmux client;
+Inside an existing tmux window, `pi-research-engineer` (or `pre`) attaches as a nested tmux client;
 it does not replace the outer client's session. To detach from the inner client,
 press the tmux prefix twice (`Ctrl+B`, `Ctrl+B`) and then `D`. For scripts or
-setup checks, `pi-research --detached` creates the session without attaching.
+setup checks, `pi-research-engineer --detached` creates the session without attaching.
 Slurm output defaults to `<project>/.pi-research-engineer/slurm/`, so it is
 visible both to the submit host and compute node when the project is on shared
 storage. Set `PI_RESEARCH_SLURM_LOG_DIR` to use a different shared log root.
@@ -78,13 +79,14 @@ This registers the package in Pi's global settings. Thereafter start ordinary
 Pi with `pi`; its extensions and skills are loaded automatically. Pin package
 versions in `package.json`, not with separate global installs.
 
-`npm link` installs the optional global `pi-research` wrapper used for tmux
+`npm link` installs the optional global `pi-research-engineer` launcher and
+its short `pre` alias for tmux
 mode. It does not replace the regular `pi` command. The wrapper never falls
 back to the system tmux; the package must have a bundled binary for the
 current platform. Set `PI_RESEARCH_TMUX_SOCKET` only when deliberately choosing
 a different dedicated socket shared by the same bundled tmux build.
 
-`pi-research` isolates its settings, authentication, model metadata, sessions,
+`pi-research-engineer` isolates its settings, authentication, model metadata, sessions,
 and web cache under the gitignored `.pi/agent/` in this repository. It does not
 read `~/.pi/agent`. The launcher explicitly loads this package, so its extensions
 and skills remain available without global package registration. Authenticate

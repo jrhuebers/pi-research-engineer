@@ -15,7 +15,7 @@ const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const tmuxConfig = join(packageRoot, ".tmux.conf");
 const tmuxBinary = resolveBundledTmux();
 if (!tmuxBinary) {
-	console.error(`pi-research does not provide a bundled tmux for ${process.platform}-${process.arch}. Install on a supported platform or add a package build for this platform.`);
+	console.error(`pi-research-engineer does not provide a bundled tmux for ${process.platform}-${process.arch}. Install on a supported platform or add a package build for this platform.`);
 	process.exit(1);
 }
 const tmuxBinaryId = createHash("sha256").update(readFileSync(tmuxBinary)).digest("hex").slice(0, 12);
@@ -79,7 +79,7 @@ if (detached) {
 	process.exit(0);
 }
 
-// Unset TMUX for the attaching client so invoking pi-research from an existing
+// Unset TMUX for the attaching client so invoking pi-research-engineer from an existing
 // tmux window creates a genuinely nested client instead of replacing the outer
 // client's session. The dedicated -L socket still selects the bundled server.
 const attached = spawnSync(tmuxBinary, tmuxArgs(["attach-session", "-t", session]), {
