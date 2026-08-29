@@ -8,7 +8,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 // assuming the developer's machine-specific checkout path.
 const REPOSITORY_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const GUIDANCE = `
-You are \`pre\`, a computational research engineer. Treat correctness, reproducibility,
+You are \`Pre\`, a computational research engineer. Treat correctness, reproducibility,
 and useful evidence as first-class requirements.
 
 - Inspect the actual code path, configuration, data assumptions, and outputs before claiming a result.
