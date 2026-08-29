@@ -67,7 +67,6 @@ try {
 	const tools = activeToolNames.map((name) => {
 		const definition = session.getToolDefinition(name);
 		if (!definition) throw new Error(`active tool is missing a definition: ${name}`);
-		const sourceInfo = session.getAllTools().find((tool) => tool.name === name)?.sourceInfo;
 		return normaliseValue({
 			name: definition.name,
 			label: definition.label,
@@ -75,7 +74,6 @@ try {
 			promptSnippet: definition.promptSnippet,
 			promptGuidelines: definition.promptGuidelines,
 			parameters: definition.parameters,
-			sourceInfo,
 		});
 	});
 

@@ -141,13 +141,7 @@ session.
   "promptGuidelines": [
     "Use read to examine files instead of cat or sed."
   ],
-  "promptSnippet": "Read file contents",
-  "sourceInfo": {
-    "origin": "top-level",
-    "path": "<builtin:read>",
-    "scope": "temporary",
-    "source": "builtin"
-  }
+  "promptSnippet": "Read file contents"
 }
 ```
 
@@ -196,14 +190,7 @@ session.
     "Use bash with run_in_background=true when a command is expected to run for a long time.",
     "Use jobs action='list' to inspect managed background jobs, jobs action='kill' to cancel one, or jobs action='extend' to increase its total time limit."
   ],
-  "promptSnippet": "Run shell commands; use run_in_background=true for long work",
-  "sourceInfo": {
-    "baseDir": "<REPOSITORY_ROOT>",
-    "origin": "package",
-    "path": "<REPOSITORY_ROOT>/background-tasks/index.ts",
-    "scope": "user",
-    "source": "../.."
-  }
+  "promptSnippet": "Run shell commands; use run_in_background=true for long work"
 }
 ```
 
@@ -254,13 +241,7 @@ session.
     "Each edits[].oldText is matched against the original file, not after earlier edits are applied. Do not emit overlapping or nested edits. Merge nearby changes into one edit.",
     "Keep edits[].oldText as small as possible while still being unique in the file. Do not pad with large unchanged regions."
   ],
-  "promptSnippet": "Make precise file edits with exact text replacement, including multiple disjoint edits in one call",
-  "sourceInfo": {
-    "origin": "top-level",
-    "path": "<builtin:edit>",
-    "scope": "temporary",
-    "source": "builtin"
-  }
+  "promptSnippet": "Make precise file edits with exact text replacement, including multiple disjoint edits in one call"
 }
 ```
 
@@ -291,13 +272,7 @@ session.
   "promptGuidelines": [
     "Use write only for new files or complete rewrites."
   ],
-  "promptSnippet": "Create or overwrite files",
-  "sourceInfo": {
-    "origin": "top-level",
-    "path": "<builtin:write>",
-    "scope": "temporary",
-    "source": "builtin"
-  }
+  "promptSnippet": "Create or overwrite files"
 }
 ```
 
@@ -349,14 +324,7 @@ session.
     "Use slurm_submit for new Slurm work so completion is reported without a polling loop.",
     "slurm_submit automatically requests the selected partition's maximum walltime; do not use shell sbatch or srun for tracked work."
   ],
-  "promptSnippet": "slurm_submit(command, partition?, gpus?, cpus?, mem?, name?, notify_after_minutes?) - submit tracked Slurm work",
-  "sourceInfo": {
-    "baseDir": "<REPOSITORY_ROOT>",
-    "origin": "package",
-    "path": "<REPOSITORY_ROOT>/extensions/slurm.ts",
-    "scope": "user",
-    "source": "../.."
-  }
+  "promptSnippet": "slurm_submit(command, partition?, gpus?, cpus?, mem?, name?, notify_after_minutes?) - submit tracked Slurm work"
 }
 ```
 
@@ -383,14 +351,7 @@ session.
   "promptGuidelines": [
     "Use slurm_jobs to diagnose a notification or answer a concrete status question, not as a routine wait loop."
   ],
-  "promptSnippet": "slurm_jobs(show_all?, include_completed?) - inspect tracked Slurm work",
-  "sourceInfo": {
-    "baseDir": "<REPOSITORY_ROOT>",
-    "origin": "package",
-    "path": "<REPOSITORY_ROOT>/extensions/slurm.ts",
-    "scope": "user",
-    "source": "../.."
-  }
+  "promptSnippet": "slurm_jobs(show_all?, include_completed?) - inspect tracked Slurm work"
 }
 ```
 
@@ -421,14 +382,7 @@ session.
   "promptGuidelines": [
     "Use slurm_cancel only for obsolete, invalid, or clearly wedged work; do not cancel healthy work merely because it is long-running."
   ],
-  "promptSnippet": "slurm_cancel(job_id, reason) - cancel obsolete Slurm work",
-  "sourceInfo": {
-    "baseDir": "<REPOSITORY_ROOT>",
-    "origin": "package",
-    "path": "<REPOSITORY_ROOT>/extensions/slurm.ts",
-    "scope": "user",
-    "source": "../.."
-  }
+  "promptSnippet": "slurm_cancel(job_id, reason) - cancel obsolete Slurm work"
 }
 ```
 
@@ -466,14 +420,7 @@ session.
     "Use jobs action='list' to inspect active local background jobs; use bash to read a listed log path.",
     "Use jobs action='kill' only for an obsolete, invalid, or wedged local background job."
   ],
-  "promptSnippet": "jobs(action?, job_id?, max_run_seconds?) — list, kill, or extend local background jobs",
-  "sourceInfo": {
-    "baseDir": "<REPOSITORY_ROOT>",
-    "origin": "package",
-    "path": "<REPOSITORY_ROOT>/background-tasks/index.ts",
-    "scope": "user",
-    "source": "../.."
-  }
+  "promptSnippet": "jobs(action?, job_id?, max_run_seconds?) — list, kill, or extend local background jobs"
 }
 ```
 
@@ -609,14 +556,7 @@ session.
     },
     "type": "object"
   },
-  "promptSnippet": "Use for web research questions. Prefer {queries:[...]} with 2-4 varied angles over a single query for broader coverage. Omit provider unless explicitly overriding the configured default.",
-  "sourceInfo": {
-    "baseDir": "<REPOSITORY_ROOT>",
-    "origin": "package",
-    "path": "<REPOSITORY_ROOT>/node_modules/pi-web-access/index.ts",
-    "scope": "user",
-    "source": "../.."
-  }
+  "promptSnippet": "Use for web research questions. Prefer {queries:[...]} with 2-4 varied angles over a single query for broader coverage. Omit provider unless explicitly overriding the configured default."
 }
 ```
 
@@ -689,14 +629,7 @@ session.
     },
     "type": "object"
   },
-  "promptSnippet": "Use to fetch readable or raw URL content, direct images, GitHub repos, and videos. Mode answer answers a prompt using only the fetched source.",
-  "sourceInfo": {
-    "baseDir": "<REPOSITORY_ROOT>",
-    "origin": "package",
-    "path": "<REPOSITORY_ROOT>/node_modules/pi-web-access/index.ts",
-    "scope": "user",
-    "source": "../.."
-  }
+  "promptSnippet": "Use to fetch readable or raw URL content, direct images, GitHub repos, and videos. Mode answer answers a prompt using only the fetched source."
 }
 ```
 
@@ -777,14 +710,7 @@ session.
     ],
     "type": "object"
   },
-  "promptSnippet": "Use after web_search, source_check, or fetch_content to retrieve stored content via responseId. Use findText to locate passages without paging through the full content.",
-  "sourceInfo": {
-    "baseDir": "<REPOSITORY_ROOT>",
-    "origin": "package",
-    "path": "<REPOSITORY_ROOT>/node_modules/pi-web-access/index.ts",
-    "scope": "user",
-    "source": "../.."
-  }
+  "promptSnippet": "Use after web_search, source_check, or fetch_content to retrieve stored content via responseId. Use findText to locate passages without paging through the full content."
 }
 ```
 
