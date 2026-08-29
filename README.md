@@ -48,10 +48,14 @@ isolated research environment.
 
 ## Tmux workflow
 
-The main tmux window is named `agent` and contains Pi. Local background jobs and Slurm jobs receive
-separate viewer windows that follow their authoritative logs. Viewer windows
-close when the underlying work reaches a terminal state; closing a viewer does
-not cancel its work.
+The main tmux window is named `agent` and contains Pi. The launcher runs Pi
+through a small supervisor: unexpected exits are recorded in
+`<state-dir>/agent-exits.log` and Pi is restarted with `--continue` using
+bounded backoff. The main pane is retained if the supervisor itself exits, so
+failure evidence is not silently lost. Local background jobs and Slurm jobs
+receive separate viewer windows that follow their authoritative logs. Viewer
+windows close when the underlying work reaches a terminal state; closing a
+viewer does not cancel its work.
 
 From inside Pi, use the `/detach` command to detach this terminal while
 leaving Pi and all jobs running. Detaching only removes the current terminal

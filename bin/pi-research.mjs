@@ -82,13 +82,21 @@ if (!sessionExists()) {
 	];
 	// Load this package explicitly so the isolated agent directory does not
 	// need or inherit the package registration from ~/.pi/agent/settings.json.
-	const commandArgs = [piBinary, "--extension", packageRoot, ...piArgs];
+	// The supervisor records abnormal exits and recovers the agent instead of
+	// allowing tmux to silently remove the pane.
+	const supervisor = join(packageRoot, "bin", "pi-agent-supervisor.mjs");
+	const commandArgs = [process.execPath, supervisor, piBinary, "--extension", packageRoot, ...piArgs];
 	const command = `exec env ${environment.join(" ")} ${commandArgs.map(shellQuote).join(" ")}`;
 	const created = spawnSync(tmuxBinary, tmuxArgs([
 		"new-session", "-d", "-s", session, "-n", "agent", "-c", cwd,
 		command,
 	]), { stdio: "inherit", env: tmuxEnvironment() });
 	if (created.status !== 0) process.exit(created.status ?? 1);
+	const agentPane = `${session}:agent.0`;
+	spawnSync(tmuxBinary, tmuxArgs(["set-option", "-p", "-t", agentPane, "remain-on-exit", "on"]), {
+		stdio: "ignore",
+		env: tmuxEnvironment(),
+	});
 }
 
 if (detached) {
