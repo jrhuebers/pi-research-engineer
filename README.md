@@ -198,13 +198,15 @@ implemented.
 
 ## Transcript timing
 
-The transcript includes durable UTC markers:
+The transcript includes durable local-time markers using the host's wall-clock
+timezone (in `YYYY-MM-DD HH:mm:ss` format):
 
 - a timestamp after each user message;
 - one elapsed-duration marker when Pi finishes all automatic work and control
   returns to the human.
 
-`Z` in a timestamp denotes UTC (Zulu time).
+Background-task log start markers use the same local-time format. Internal
+session and Slurm metadata may still use machine-readable epoch or ISO values.
 
 ## Sessions
 

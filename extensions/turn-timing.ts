@@ -2,6 +2,7 @@
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
+import { formatLocalTimestamp } from "../shared/local-time.ts";
 
 const ENTRY_TYPE = "pi-research-engineer-turn-timing";
 
@@ -10,11 +11,6 @@ type TimingMarker = {
 	timestamp: number;
 	durationMs?: number;
 };
-
-function formatTimestamp(timestamp: number): string {
-	// ISO timestamps are unambiguous across long-running and remote workflows.
-	return new Date(timestamp).toISOString().replace("T", " ").replace(/\.\d{3}Z$/, "Z");
-}
 
 function formatDuration(durationMs: number): string {
 	if (durationMs < 1_000) return `${durationMs}ms`;
@@ -32,7 +28,7 @@ export default function turnTiming(pi: ExtensionAPI): void {
 		const detail = marker.kind === "turn"
 			? `turn ${formatDuration(marker.durationMs ?? 0)}`
 			: "user message";
-		return new Text(theme.fg("dim", `── ${formatTimestamp(marker.timestamp)} · ${detail} ──`), 0, 0);
+		return new Text(theme.fg("dim", `── ${formatLocalTimestamp(marker.timestamp)} · ${detail} ──`), 0, 0);
 	});
 
 	pi.on("message_end", (event) => {

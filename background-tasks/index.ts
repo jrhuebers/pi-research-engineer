@@ -13,6 +13,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { StringEnum } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { formatLocalTimestamp } from "../shared/local-time.ts";
 import { Type } from "typebox";
 import { parse } from "yaml";
 
@@ -307,7 +308,7 @@ function watchBackgroundProcess(pi: ExtensionAPI, runtime: Runtime, job: Runtime
 function createProcess(command: string, cwd: string, logPath: string, statusPath: string): ProcessHandle {
 	const createdAt = Date.now();
 	mkdirSync(dirname(logPath), { recursive: true });
-	writeFileSync(logPath, `=== started ${new Date(createdAt).toISOString()} ===\n`, { flag: "a", mode: 0o600 });
+	writeFileSync(logPath, `=== started ${formatLocalTimestamp(createdAt)} ===\n`, { flag: "a", mode: 0o600 });
 	const logFd = openSync(logPath, "a", 0o600);
 	const script = [
 		"set +e",
