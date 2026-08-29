@@ -21,6 +21,10 @@ if (!tmuxBinary) {
 }
 const tmuxBinaryId = createHash("sha256").update(readFileSync(tmuxBinary)).digest("hex").slice(0, 12);
 const tmuxSocket = process.env.PI_RESEARCH_TMUX_SOCKET || `pi-research-${tmuxBinaryId}`;
+// -L namespaces the socket name, but tmux still places that socket under
+// TMUX_TMPDIR. Keep the runtime socket inside this package's ignored state
+// directory instead of inheriting a user-global tmux directory.
+const tmuxTmpDir = process.env.PI_RESEARCH_TMUX_TMPDIR || join(packageRoot, ".pi", "tmux");
 const agentDir = process.env.PI_RESEARCH_AGENT_DIR || join(packageRoot, ".pi", "agent");
 const safeDirectoryName = (basename(canonicalCwd).replaceAll(/[^A-Za-z0-9_-]+/g, "-").replaceAll(/^-+|-+$/g, "") || "project").slice(0, 32);
 const defaultSession = `pre-${safeDirectoryName}-${createHash("sha256").update(canonicalCwd).digest("hex").slice(0, 8)}`;
@@ -42,17 +46,25 @@ function tmuxArgs(args) {
 	return ["-L", tmuxSocket, "-f", tmuxConfig, ...args];
 }
 
+function tmuxEnvironment() {
+	return { ...process.env, TMUX_TMPDIR: tmuxTmpDir };
+}
+
 function environmentWithoutTmux() {
-	const environment = { ...process.env };
+	const environment = tmuxEnvironment();
 	delete environment.TMUX;
 	return environment;
 }
 
 function sessionExists() {
-	return spawnSync(tmuxBinary, tmuxArgs(["has-session", "-t", session]), { stdio: "ignore" }).status === 0;
+	return spawnSync(tmuxBinary, tmuxArgs(["has-session", "-t", session]), {
+		stdio: "ignore",
+		env: tmuxEnvironment(),
+	}).status === 0;
 }
 
 mkdirSync(stateDir, { recursive: true });
+mkdirSync(tmuxTmpDir, { recursive: true, mode: 0o700 });
 mkdirSync(agentDir, { recursive: true });
 if (!sessionExists()) {
 	const environment = [
@@ -61,6 +73,8 @@ if (!sessionExists()) {
 		`PI_RESEARCH_TMUX_STATE_DIR=${shellQuote(stateDir)}`,
 		`PI_RESEARCH_TMUX_BIN=${shellQuote(tmuxBinary)}`,
 		`PI_RESEARCH_TMUX_SOCKET=${shellQuote(tmuxSocket)}`,
+		`PI_RESEARCH_TMUX_TMPDIR=${shellQuote(tmuxTmpDir)}`,
+		`TMUX_TMPDIR=${shellQuote(tmuxTmpDir)}`,
 		`PI_CODING_AGENT_DIR=${shellQuote(agentDir)}`,
 		...(outerTerminalProgram && outerTerminalProgram !== "tmux"
 			? [`TERM_PROGRAM=${shellQuote(outerTerminalProgram)}`]
@@ -73,7 +87,7 @@ if (!sessionExists()) {
 	const created = spawnSync(tmuxBinary, tmuxArgs([
 		"new-session", "-d", "-s", session, "-n", "agent", "-c", cwd,
 		command,
-	]), { stdio: "inherit" });
+	]), { stdio: "inherit", env: tmuxEnvironment() });
 	if (created.status !== 0) process.exit(created.status ?? 1);
 }
 

@@ -28,7 +28,7 @@ that session as needed (for example with Pi's `/login`).
 
 - a package-local Pi executable;
 - this repository's extensions and skills;
-- the bundled, version-pinned tmux binary and a private tmux socket;
+- the bundled, version-pinned tmux binary and a package-local tmux socket;
 - an isolated Pi profile at `<this-repo>/.pi/agent/`.
 
 The default tmux session is deterministic for the canonical working directory.
@@ -53,8 +53,8 @@ separate viewer windows that follow their authoritative logs. Viewer windows
 close when the underlying work reaches a terminal state; closing a viewer does
 not cancel its work.
 
-To detach from a nested `pre` tmux client, press the tmux prefix twice and then
-`D`:
+From inside Pi, use the `/detach` command to detach this terminal while
+leaving Pi and all jobs running. The equivalent nested-tmux key sequence is:
 
 ```text
 Ctrl+B  Ctrl+B  D
@@ -70,6 +70,7 @@ Useful overrides:
 
 ```bash
 PI_RESEARCH_TMUX_SESSION=my-session pre
+PI_RESEARCH_TMUX_TMPDIR=/path/to/private-tmux-runtime pre
 PI_RESEARCH_AGENT_DIR=/path/to/isolated-profile pre
 PI_RESEARCH_SLURM_LOG_DIR=/shared/log/root pre
 ```
