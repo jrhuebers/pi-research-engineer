@@ -70,28 +70,23 @@ their monitoring. A fresh Pi session can still inspect account jobs with
 From this repository:
 
 ```bash
-npm install
-npx pi install .
-npm link
+make setup
 ```
 
-This registers the package in Pi's global settings. Thereafter start ordinary
-Pi with `pi`; its extensions and skills are loaded automatically. Pin package
-versions in `package.json`, not with separate global installs.
+`make setup` runs `npm install` and `npm link`. The latter installs the global
+`pi-research-engineer` launcher and its short `pre` alias, but does not replace
+or configure the regular `pi` command. The wrapper never falls back to the
+system tmux; the package must have a bundled binary for the current platform.
+Set `PI_RESEARCH_TMUX_SOCKET` only when deliberately choosing a different
+dedicated socket shared by the same bundled tmux build.
 
-`npm link` installs the optional global `pi-research-engineer` launcher and
-its short `pre` alias for tmux
-mode. It does not replace the regular `pi` command. The wrapper never falls
-back to the system tmux; the package must have a bundled binary for the
-current platform. Set `PI_RESEARCH_TMUX_SOCKET` only when deliberately choosing
-a different dedicated socket shared by the same bundled tmux build.
-
-`pi-research-engineer` isolates its settings, authentication, model metadata, sessions,
-and web cache under the gitignored `.pi/agent/` in this repository. It does not
-read `~/.pi/agent`. The launcher explicitly loads this package, so its extensions
-and skills remain available without global package registration. Authenticate
-providers separately in the isolated profile. Set `PI_RESEARCH_AGENT_DIR` to
-choose another isolated location.
+This setup deliberately does **not** run `pi install` and does not write to
+`~/.pi/agent`. Ordinary `pi` therefore cannot load this repository's extensions
+or skills. `pi-research-engineer`/`pre` explicitly loads this package and
+isolates its settings, authentication, model metadata, sessions, and web cache
+under the gitignored `.pi/agent/` in this repository. Authenticate providers
+separately in the isolated profile. Set `PI_RESEARCH_AGENT_DIR` to choose
+another isolated location.
 
 For development, edit an extension and use `/reload` in a running Pi session.
 The background-task default is configured in `background-tasks/config.yaml`.
