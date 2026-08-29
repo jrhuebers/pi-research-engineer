@@ -216,9 +216,15 @@ moved into another Pi package without bringing along the Slurm or tmux code.
 ## Development
 
 ```bash
-make setup  # npm install + npm link
-make check  # TypeScript type-check
+make setup            # npm install + npm link + local Git hooks
+make check            # TypeScript type-check
+make prompt-snapshot  # regenerate PRE_SYSTEM_PROMPT.md
 ```
+
+`PRE_SYSTEM_PROMPT.md` is a checked-in, provider-independent baseline of
+Pre's assembled prompt and active tool definitions. The pre-commit hook
+regenerates it; CI rejects a push or pull request when it is stale. It cannot
+include provider-side hidden instructions or dynamic project/session context.
 
 After editing an extension in a running `pre` session, run:
 

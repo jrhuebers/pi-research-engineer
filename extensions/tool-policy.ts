@@ -2,13 +2,16 @@
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
-const DISABLED_TOOLS = new Set(["source_check"]);
+export const DISABLED_TOOLS = new Set(["source_check"]);
+
+export function applyToolPolicyToNames(active: readonly string[]): string[] {
+	return active.filter((name) => !DISABLED_TOOLS.has(name));
+}
 
 function applyToolPolicy(pi: ExtensionAPI): void {
 	const active = pi.getActiveTools();
-	if (active.some((name) => DISABLED_TOOLS.has(name))) {
-		pi.setActiveTools(active.filter((name) => !DISABLED_TOOLS.has(name)));
-	}
+	const filtered = applyToolPolicyToNames(active);
+	if (filtered.length !== active.length) pi.setActiveTools(filtered);
 }
 
 export default function toolPolicy(pi: ExtensionAPI): void {

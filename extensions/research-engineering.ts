@@ -34,8 +34,12 @@ session.
 - Keep tmux as a viewing surface: do not use it to take ownership of processes that should remain managed by the background-job or Slurm tools.
 `.trim();
 
+export function withResearchEngineeringGuidance(systemPrompt: string, tmuxMode: boolean): string {
+	return `${systemPrompt}\n\n${GUIDANCE}${tmuxMode ? `\n\n${TMUX_GUIDANCE}` : ""}`;
+}
+
 export default function researchEngineering(pi: ExtensionAPI): void {
 	pi.on("before_agent_start", (event) => ({
-		systemPrompt: `${event.systemPrompt}\n\n${GUIDANCE}${process.env.PI_RESEARCH_TMUX === "1" ? `\n\n${TMUX_GUIDANCE}` : ""}`,
+		systemPrompt: withResearchEngineeringGuidance(event.systemPrompt, process.env.PI_RESEARCH_TMUX === "1"),
 	}));
 }

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+npm run prompt:snapshot
+git add PRE_SYSTEM_PROMPT.md

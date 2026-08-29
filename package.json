@@ -12,7 +12,8 @@
   ],
   "scripts": {
     "postinstall": "patch-package",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prompt:snapshot": "node --experimental-strip-types scripts/generate-prompt-snapshot.mjs"
   },
   "bin": {
     "pi-research-engineer": "./bin/pi-research.mjs",
