@@ -1,4 +1,4 @@
-/** Render a durable timestamp and elapsed duration after every Pi turn. */
+/** Render user-message timestamps and one elapsed duration when Pi settles. */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
@@ -24,7 +24,7 @@ function formatDuration(durationMs: number): string {
 }
 
 export default function turnTiming(pi: ExtensionAPI): void {
-	const startedAtByTurn = new Map<number, number>();
+	let agentStartedAt: number | undefined;
 
 	pi.registerEntryRenderer<TimingMarker>(ENTRY_TYPE, (entry, _options, theme) => {
 		const marker = entry.data;
@@ -41,14 +41,16 @@ export default function turnTiming(pi: ExtensionAPI): void {
 		pi.appendEntry<TimingMarker>(ENTRY_TYPE, { kind: "user", timestamp: Date.now() });
 	});
 
-	pi.on("turn_start", (event) => {
-		startedAtByTurn.set(event.turnIndex, Date.now());
+	pi.on("agent_start", () => {
+		// An agent cycle can contain many model/tool turns. Preserve the first
+		// start time until Pi is truly idle again.
+		agentStartedAt ??= Date.now();
 	});
 
-	pi.on("turn_end", (event) => {
+	pi.on("agent_settled", () => {
 		const endedAt = Date.now();
-		const startedAt = startedAtByTurn.get(event.turnIndex) ?? endedAt;
-		startedAtByTurn.delete(event.turnIndex);
+		const startedAt = agentStartedAt ?? endedAt;
+		agentStartedAt = undefined;
 		pi.appendEntry<TimingMarker>(ENTRY_TYPE, {
 			kind: "turn",
 			timestamp: endedAt,

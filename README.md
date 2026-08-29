@@ -11,8 +11,8 @@ experiment layout, W&B integration, or project-specific provenance system.
   `background-tasks/config.yaml`;
 - `pi-web-access` for web, paper, and documentation lookup;
 - always-on research-engineering guidance;
-- durable UTC timestamps after user messages and elapsed-duration markers after
-  each Pi turn;
+- durable UTC timestamps after user messages and one elapsed-duration marker
+  when Pi settles and returns control to the human;
 - `slurm_submit`, `slurm_jobs`, and `slurm_cancel` tools;
 - pickup, terminal-state, and optional timed-reminder notifications for Slurm
   jobs submitted through `slurm_submit`;
