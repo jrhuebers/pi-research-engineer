@@ -1,51 +1,29 @@
 ---
 name: tmux-operations
-description: Safely inspect and clean up Pi research tmux viewers while preserving the main Pi window and active job viewers. Use for tmux window operations around local or Slurm work.
+description: Safely inspect and manage tmux sessions and windows without confusing viewer panes with the processes they display. Use when opening, watching, or closing tmux windows.
 ---
 
 # Tmux operations
 
-Tmux is a viewing surface, not a process manager:
+Treat tmux as a terminal/viewing surface, not as the owner of long-running
+processes. Closing a window closes its pane; it does not necessarily stop the
+process running in it.
 
-- Slurm owns Slurm jobs.
-- The background-job tool owns local processes.
-- Killing a viewer does not cancel its job.
+Before changing anything:
 
-## Use the Pi server
+1. Identify the intended tmux server, socket, and session.
+2. List windows and panes with their names and commands.
+3. Identify which windows are active, viewers, or interactive work.
+4. Check the underlying process or job state before closing a viewer.
 
-Always use the configured binary, socket, and session; do not use the default
-tmux server:
+When cleaning up:
 
-```bash
-TMUX_BIN="$PI_RESEARCH_TMUX_BIN"
-TMUX_SOCKET="$PI_RESEARCH_TMUX_SOCKET"
-TMUX_SESSION="$PI_RESEARCH_TMUX_SESSION"
-"$TMUX_BIN" -L "$TMUX_SOCKET" list-windows -t "$TMUX_SESSION" \
-  -F '#{window_index}|#{window_name}|#{window_active}|#{pane_current_command}'
-```
+- preserve the user's active/primary window unless asked otherwise;
+- close viewers only when their underlying work is confirmed finished;
+- do not cancel or kill work merely to remove a window;
+- use the relevant process manager to stop work.
 
-If the default `tmux` command reports `server exited unexpectedly`, check these
-variables and use the configured binary.
-
-## Inspect and clean up
-
-1. List windows with the configured server.
-2. Preserve the main `pi` window.
-3. For `slurm-<jobid>` viewers, verify state with `slurm_jobs` or Slurm.
-4. For `local-<id>` viewers, verify state with `jobs`.
-5. Preserve viewers for nonterminal jobs; close viewers only for confirmed
-   terminal jobs.
-6. List windows again and report what was preserved/closed.
-
-Close a viewer with:
-
-```bash
-"$TMUX_BIN" -L "$TMUX_SOCKET" kill-window -t "$TMUX_SESSION:slurm-12345"
-```
-
-Do not cancel a job to close its viewer. Use the Slurm cancellation tool only
-for obsolete or wedged jobs and provide a reason.
-
-A `[waiting for log...]` message means the viewer started before Slurm created
-the output file. It is normally harmless. Delayed reminders can refer to
-already-terminal jobs, so always verify the job ID before acting.
+If an application uses a custom tmux socket or binary, use that configuration
+rather than silently connecting to the default tmux server. If a viewer says it
+is waiting for a log or process, treat that as a display-state message and check
+the underlying work separately.
