@@ -13,11 +13,13 @@
   "scripts": {
     "postinstall": "patch-package",
     "typecheck": "tsc --noEmit",
-    "prompt:snapshot": "node --experimental-strip-types scripts/generate-prompt-snapshot.mjs"
+    "prompt:snapshot": "node --experimental-strip-types scripts/generate-prompt-snapshot.mjs",
+    "test:workspace": "node tests/workspace-orchestrator.test.mjs"
   },
   "bin": {
     "pi-research-engineer": "./bin/pi-research.mjs",
-    "pre": "./bin/pi-research.mjs"
+    "pre": "./bin/pi-research.mjs",
+    "pre-workspace": "./bin/pre-workspace.mjs"
   },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",

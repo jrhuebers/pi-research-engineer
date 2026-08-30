@@ -48,6 +48,17 @@ This is intentionally separate from ordinary `pi`:
 Use ordinary `pi` when you want ordinary Pi. Use `pre` when you want this
 isolated research environment.
 
+## Optional local Sway workspace
+
+For a remote Pre agent with a native local GUI, run Sway inside a small Linux
+VM displayed as one ordinary host-desktop window. The VM hosts the local
+`pre-workspace` controller; the remote agent receives only an SSH-forwarded
+Unix-socket API for its dedicated workspace (`state`, `focus`, `split`,
+`open_file`, `open_pdf`, and `open_terminal`). It returns JSON state rather
+than screenshots and cannot operate the host desktop. See
+[docs/local-sway-workspace.md](docs/local-sway-workspace.md) for VM setup,
+SSH forwarding, filesystem synchronization, and security boundaries.
+
 ## Tmux workflow
 
 The main tmux window is named `agent` and contains Pi. The launcher runs Pi
