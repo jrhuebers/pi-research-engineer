@@ -57,7 +57,9 @@ Unix-socket API for its dedicated workspace (`state`, `focus`, `split`,
 `open_file`, `open_pdf`, and `open_terminal`). It returns JSON state rather
 than screenshots and cannot operate the host desktop. See
 [docs/local-sway-workspace.md](docs/local-sway-workspace.md) for VM setup,
-SSH forwarding, filesystem synchronization, and security boundaries.
+SSH forwarding, filesystem synchronization, and security boundaries. Fedora
+users can also run `pre-workspace-nested-sway` for a quick host-side nested
+Sway trial; it is not a replacement for VM process isolation.
 
 ## Tmux workflow
 

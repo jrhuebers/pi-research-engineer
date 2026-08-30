@@ -15,11 +15,43 @@ Pre agent ─ SSH Unix-socket forward ─> Linux VM in a normal host window
   JSON state only                        editor / foot / zathura
 ```
 
-The VM is the security boundary. Run Sway as the desktop session **inside a
-small Linux VM** (for example UTM on macOS, or QEMU/KVM on Linux), rather than
-on the host desktop. Its graphical output is then just one ordinary host
-window. The controller is bound to that VM's `SWAYSOCK`, so it cannot reach the
-host GNOME/macOS/Windows window manager.
+The VM is the strongest security boundary. Run Sway as the desktop session
+**inside a small Linux VM** (for example UTM on macOS, or QEMU/KVM on Linux),
+rather than on the host desktop. Its graphical output is then just one ordinary
+host window. The controller is bound to that VM's `SWAYSOCK`, so it cannot
+reach the host GNOME/macOS/Windows window manager.
+
+For a fast UI-only trial on a Wayland Fedora host, a nested Sway process can
+also run directly in one host window. It isolates window-manager control but
+not local processes; use the VM when remote terminal commands must have a hard
+OS boundary.
+
+## Fast Fedora nested-Sway trial
+
+Install the local applications on the Fedora host:
+
+```bash
+sudo dnf install sway foot zathura geany git nodejs openssh-clients fuse-sshfs
+```
+
+Run this from a **normal host terminal**, not from within Sway:
+
+```bash
+cd /path/to/pi-research-engineer
+pre-workspace-nested-sway \
+  --workspace pre-agent \
+  --allow-root "$HOME" \
+  --editor geany \
+  --terminal foot \
+  --pdf-viewer zathura
+```
+
+The launcher opens a nested Sway window and automatically starts the
+controller with that nested compositor's environment. This avoids having to
+paste any setup commands into the nested session; nested Wayland compositors
+do not necessarily share the host clipboard. `Super+Enter` opens `foot` and
+`Super+Shift+E` exits the nested session. Continue with the SSH forwarding
+section below from another normal host terminal.
 
 ## Controller API
 

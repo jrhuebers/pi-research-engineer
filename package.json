@@ -19,7 +19,8 @@
   "bin": {
     "pi-research-engineer": "./bin/pi-research.mjs",
     "pre": "./bin/pi-research.mjs",
-    "pre-workspace": "./bin/pre-workspace.mjs"
+    "pre-workspace": "./bin/pre-workspace.mjs",
+    "pre-workspace-nested-sway": "./bin/pre-workspace-nested-sway.mjs"
   },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",
