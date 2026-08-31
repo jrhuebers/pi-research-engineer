@@ -12,7 +12,9 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { StringEnum } from "@earendil-works/pi-ai";
+import { FooterComponent } from "@earendil-works/pi-coding-agent";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { formatLocalTimestamp } from "../shared/local-time.ts";
 import { Type } from "typebox";
 import { parse } from "yaml";
@@ -85,6 +87,7 @@ type Runtime = {
 	nextJobNumber: number;
 	sessionToken: string;
 	jobs: Map<string, RuntimeJob>;
+	onChange?: () => void;
 	pollTimer?: NodeJS.Timeout;
 };
 
@@ -199,6 +202,51 @@ function emitFinished(pi: ExtensionAPI, job: RuntimeJob): void {
 	});
 }
 
+function updateJobFooter(ctx: ExtensionContext, runtime: Runtime): void {
+	if (ctx.mode !== "tui") return;
+	ctx.ui.setFooter((tui, theme, footerData) => {
+		const footerSession = {
+			get state() {
+				return { model: ctx.model, thinkingLevel: ctx.thinkingLevel };
+			},
+			sessionManager: ctx.sessionManager,
+			getContextUsage: () => ctx.getContextUsage(),
+			modelRuntime: { isUsingSubscription: () => false },
+		} as unknown as ConstructorParameters<typeof FooterComponent>[0];
+		const footer = new FooterComponent(footerSession, footerData);
+		const unsubscribe = footerData.onBranchChange(() => tui.requestRender());
+
+		return {
+			dispose: () => {
+				unsubscribe();
+				footer.dispose();
+			},
+			invalidate: () => footer.invalidate(),
+			render(width: number): string[] {
+				const lines = footer.render(width);
+				if (lines.length === 0) return lines;
+
+				const pathLine = lines[0] ?? "";
+				const jobLine = theme.fg("dim", `Background jobs: ${runtime.jobs.size} running`);
+				const jobWidth = visibleWidth(jobLine);
+				const pathWidth = visibleWidth(pathLine);
+				if (jobWidth >= width) {
+					lines[0] = truncateToWidth(jobLine, width, "");
+				} else {
+					const gap = Math.max(2, width - pathWidth - jobWidth);
+					const availablePathWidth = width - jobWidth - 1;
+					const renderedPath = pathWidth + gap + jobWidth <= width
+						? pathLine
+						: truncateToWidth(pathLine, availablePathWidth, "");
+					const renderedGap = Math.max(1, width - visibleWidth(renderedPath) - jobWidth);
+					lines[0] = `${renderedPath}${" ".repeat(renderedGap)}${jobLine}`;
+				}
+				return lines;
+			},
+		};
+	});
+}
+
 function serialise(runtime: Runtime): PersistedState {
 	return {
 		version: STATE_VERSION,
@@ -280,6 +328,7 @@ function finishJob(pi: ExtensionAPI, runtime: Runtime, job: RuntimeJob, exit: Pr
 	clearJobTimers(job);
 	runtime.jobs.delete(job.id);
 	persist(pi, runtime);
+	runtime.onChange?.();
 	emitFinished(pi, job);
 	notifyFinished(pi, job);
 }
@@ -422,22 +471,28 @@ export default function backgroundTasks(pi: ExtensionAPI): void {
 	let runtime: Runtime | undefined;
 
 	pi.on("session_start", (_event, ctx) => {
-		runtime = restore(pi, ctx, config);
+		const sessionRuntime = restore(pi, ctx, config);
+		runtime = sessionRuntime;
+		sessionRuntime.onChange = () => updateJobFooter(ctx, sessionRuntime);
+		updateJobFooter(ctx, sessionRuntime);
 	});
 
-	pi.on("session_shutdown", (event) => {
+	pi.on("session_shutdown", (event, ctx) => {
+		if (ctx.mode === "tui") ctx.ui.setFooter(undefined);
 		if (!runtime) return;
-		if (runtime.pollTimer) clearInterval(runtime.pollTimer);
-		runtime.pollTimer = undefined;
+		const sessionRuntime = runtime;
+		sessionRuntime.onChange = undefined;
+		if (sessionRuntime.pollTimer) clearInterval(sessionRuntime.pollTimer);
+		sessionRuntime.pollTimer = undefined;
 		if (event.reason === "quit") {
-			for (const job of runtime.jobs.values()) requestTermination(pi, runtime, job, "killed");
+			for (const job of sessionRuntime.jobs.values()) requestTermination(pi, sessionRuntime, job, "killed");
 		} else {
 			// A reload immediately reconstructs and reschedules these timers in its
 			// fresh extension instance. Do not leave callbacks bound to a stale
 			// session runtime after any session transition.
-			for (const job of runtime.jobs.values()) clearJobTimers(job);
+			for (const job of sessionRuntime.jobs.values()) clearJobTimers(job);
 		}
-		persist(pi, runtime);
+		persist(pi, sessionRuntime);
 	});
 
 	pi.registerCommand("jobs", {
@@ -485,6 +540,7 @@ export default function backgroundTasks(pi: ExtensionAPI): void {
 				const job = newJob(runtime, { command: p.command, description: p.description, cwd: ctx.cwd, maxRunSeconds, notifyOnExit, process });
 				runtime.jobs.set(job.id, job);
 				persist(pi, runtime);
+				runtime.onChange?.();
 				watchBackgroundProcess(pi, runtime, job, process.exit);
 				return { content: [{ type: "text", text: `Started ${job.id} in the background. Description: ${job.description}; PID/PGID: ${job.pgid}; log: ${job.logPath}` }], details: undefined };
 			}
@@ -524,6 +580,7 @@ export default function backgroundTasks(pi: ExtensionAPI): void {
 				const job = newJob(runtime, { command: p.command, description: p.description, cwd: ctx.cwd, maxRunSeconds, notifyOnExit, process });
 				runtime.jobs.set(job.id, job);
 				persist(pi, runtime);
+				runtime.onChange?.();
 				watchBackgroundProcess(pi, runtime, job, process.exit);
 				return { content: [{ type: "text", text: `Moved ${job.id} to the background after ${backgroundAfterSeconds}s. Description: ${job.description}; PID/PGID: ${job.pgid}; log: ${job.logPath}` }], details: undefined };
 			}

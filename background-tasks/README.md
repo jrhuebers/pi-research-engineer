@@ -41,6 +41,10 @@ project. The extension persists active job state in the Pi session. On an
 explicit Pi quit it sends `SIGTERM` to all managed process groups; on reload it
 restores monitoring of still-running groups.
 
+## TUI
+
+The Pi TUI shows the number of running managed jobs in light-grey text, right-aligned on the footer line beside the path.
+
 ## Optional integrations
 
 The extension itself has no tmux dependency. It emits these event-bus events:
