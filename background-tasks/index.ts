@@ -21,7 +21,7 @@ const STATE_ENTRY = "pi-background-tasks-state";
 const EVENT_STARTED = "background-tasks:started";
 const EVENT_FINISHED = "background-tasks:finished";
 const STATE_VERSION = 1;
-const COMPLETION_TAIL_CHARS = 4_000;
+const COMPLETION_TAIL_CHARS = 500;
 const POLL_INTERVAL_MS = 1_000;
 const KILL_GRACE_MS = 5_000;
 
