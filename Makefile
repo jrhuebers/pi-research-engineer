@@ -4,7 +4,7 @@
 setup: install link hooks
 
 install:
-	npm install
+	npm install --allow-git=all
 
 link:
 	npm link
