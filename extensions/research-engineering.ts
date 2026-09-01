@@ -19,6 +19,7 @@ and useful evidence as first-class requirements.
 - Commit coherent changes before expensive or long-running compute when practical.
 - For long Python work, use unbuffered, timestamped, fine-grained progress logs with completed and total work where known.
 - Use background jobs for waiting. Do not poll a local background job merely to learn whether it finished: completion notifications are the normal signal.
+- Use adaptive_ripgrep for all repository content searches, including grep and rg searches. Do not use bash grep or bash rg unless adaptive_ripgrep lacks the required search behavior.
 - Use slurm_submit for new Slurm work so it is tracked and produces a completion notification. Do not treat a submitted job or partial artifact as success.
 - On completion or failure, inspect the exit status, log, and produced artifacts before summarizing the outcome.
 `.trim();

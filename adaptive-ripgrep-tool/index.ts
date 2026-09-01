@@ -220,10 +220,11 @@ export default function adaptiveRipgrepTool(pi: ExtensionAPI): void {
 	pi.registerTool({
 		name: "adaptive_ripgrep",
 		label: "Adaptive Ripgrep",
-		description: "Search file contents with ripgrep. Small or targeted searches return normal matching lines; large searches return compact per-file occurrence counts, line counts, and character counts.",
-		promptSnippet: "adaptive_ripgrep(pattern, paths?, globs?) - search files with adaptive output sizing",
+		description: "Search repository file contents. Use this for all grep and ripgrep searches; small or targeted searches return normal matching lines, while large searches return compact per-file occurrence counts, line counts, and character counts.",
+		promptSnippet: "adaptive_ripgrep(pattern, paths?, globs?) - search file contents with adaptive output sizing",
 		promptGuidelines: [
-			"Use adaptive_ripgrep instead of running broad rg searches through bash.",
+			"Use adaptive_ripgrep for all content searches, including grep and rg searches. Do not use bash grep or bash rg for repository content searches.",
+			"Use bash only for shell-specific processing or search behavior that adaptive_ripgrep does not support.",
 			"For a broad search, first inspect the compact file summary, then repeat the search with selected file paths to retrieve matching lines.",
 		],
 		parameters: Type.Object({
