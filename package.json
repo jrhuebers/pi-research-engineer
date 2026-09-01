@@ -28,6 +28,8 @@
     "@rynx-ai/tmux": "0.0.0-bootstrap.0",
     "patch-package": "8.0.1",
     "pi-adaptive-ripgrep": "git+https://github.com/jrhuebers/pi-adaptive-ripgrep.git",
+    "pi-background-tasks": "git+https://github.com/jrhuebers/pi-background-tasks.git",
+    "pi-turn-timing": "git+https://github.com/jrhuebers/pi-turn-timing.git",
     "pi-web-access": "0.24.1",
     "yaml": "2.9.0"
   },
@@ -45,7 +47,8 @@
     "extensions": [
       "./extensions",
       "./node_modules/pi-adaptive-ripgrep/index.ts",
-      "./background-tasks/index.ts",
+      "./node_modules/pi-background-tasks/index.ts",
+      "./node_modules/pi-turn-timing/index.ts",
       "./node_modules/pi-web-access/index.ts"
     ],
     "skills": [

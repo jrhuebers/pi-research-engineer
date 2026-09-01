@@ -166,7 +166,7 @@ involving the model.
 The default foreground-to-background delay is configured in:
 
 ```text
-background-tasks/config.yaml
+node_modules/pi-background-tasks/config.yaml
 ```
 
 On an explicit Pi quit, managed local process groups receive `SIGTERM`. Use
@@ -250,8 +250,9 @@ preserves the session transcript.
 ## Repository layout
 
 ```text
-background-tasks/     Standalone local background-task extension and YAML config
-node_modules/pi-adaptive-ripgrep/ External adaptive ripgrep dependency
+node_modules/pi-adaptive-ripgrep/  External adaptive ripgrep dependency
+node_modules/pi-background-tasks/  External background-task dependency
+node_modules/pi-turn-timing/       External turn-timing dependency
 bin/                  pre / pi-research-engineer launcher
 extensions/           Research guidance, Slurm, tmux viewers, timing, policies
 skills/               On-demand computational-research and operations guidance
@@ -260,8 +261,8 @@ docs/                 Design notes
 Makefile              Setup and validation targets
 ```
 
-The background-task extension is deliberately self-contained so it can later be
-moved into another Pi package without bringing along the Slurm or tmux code.
+The background-task and turn-timing extensions are standalone dependencies so
+they can be reused without bringing along the Slurm or tmux code.
 
 ## Development
 
