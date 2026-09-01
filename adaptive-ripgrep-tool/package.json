@@ -1,0 +1,15 @@
+{
+  "name": "adaptive-ripgrep-tool",
+  "version": "0.1.0",
+  "description": "Pi extension providing bounded adaptive ripgrep search",
+  "private": true,
+  "type": "module",
+  "keywords": ["pi-package", "pi-extension", "ripgrep", "search"],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "pi": {
+    "extensions": ["./index.ts"]
+  }
+}

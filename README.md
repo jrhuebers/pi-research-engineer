@@ -172,6 +172,20 @@ background-tasks/config.yaml
 On an explicit Pi quit, managed local process groups receive `SIGTERM`. Use
 Slurm for work that must outlive the interactive Pi process.
 
+## Adaptive search
+
+The `adaptive_ripgrep` tool uses detailed matching output for small or targeted
+searches and switches to a compact per-file summary for broad searches. The
+summary includes occurrence count, line count, and character count. Thresholds
+are configured in:
+
+```text
+adaptive-ripgrep-tool/config.json
+```
+
+After a broad search, call it again with selected file paths to retrieve the
+matching lines.
+
 ## Slurm
 
 The local-cluster Slurm tools are:
@@ -236,6 +250,7 @@ preserves the session transcript.
 ## Repository layout
 
 ```text
+adaptive-ripgrep-tool/ Adaptive ripgrep extension and JSON config
 background-tasks/     Standalone local background-task extension and YAML config
 bin/                  pre / pi-research-engineer launcher
 extensions/           Research guidance, Slurm, tmux viewers, timing, policies
