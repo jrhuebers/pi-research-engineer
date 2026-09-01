@@ -180,7 +180,7 @@ summary includes occurrence count, line count, and character count. Thresholds
 are configured in:
 
 ```text
-adaptive-ripgrep-tool/config.json
+node_modules/pi-adaptive-ripgrep/config.json
 ```
 
 After a broad search, call it again with selected file paths to retrieve the
@@ -250,8 +250,8 @@ preserves the session transcript.
 ## Repository layout
 
 ```text
-adaptive-ripgrep-tool/ Adaptive ripgrep extension and JSON config
 background-tasks/     Standalone local background-task extension and YAML config
+node_modules/pi-adaptive-ripgrep/ External adaptive ripgrep dependency
 bin/                  pre / pi-research-engineer launcher
 extensions/           Research guidance, Slurm, tmux viewers, timing, policies
 skills/               On-demand computational-research and operations guidance

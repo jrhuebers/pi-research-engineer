@@ -27,6 +27,7 @@
   "dependencies": {
     "@rynx-ai/tmux": "0.0.0-bootstrap.0",
     "patch-package": "8.0.1",
+    "pi-adaptive-ripgrep": "git+https://github.com/jrhuebers/pi-adaptive-ripgrep.git",
     "pi-web-access": "0.24.1",
     "yaml": "2.9.0"
   },
@@ -43,7 +44,7 @@
   "pi": {
     "extensions": [
       "./extensions",
-      "./adaptive-ripgrep-tool/index.ts",
+      "./node_modules/pi-adaptive-ripgrep/index.ts",
       "./background-tasks/index.ts",
       "./node_modules/pi-web-access/index.ts"
     ],
